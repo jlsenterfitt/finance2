@@ -8,34 +8,32 @@ import unittest
 class TestCallSearchApi(unittest.TestCase):
 
     def test_generalTicker(self):
-        actual = data_gatherer._callSearchApi(['MSFT'], Config.API_KEY)
-        expected = {'MSFT': 'Microsoft Corporation'}
-        self.assertDictEqual(actual, expected)
+        actual = data_gatherer._callSearchApi('MSFT', Config.API_KEY)
+        expected = 'Microsoft Corporation'
+        self.assertEqual(actual, expected)
 
     def test_badTicker(self):
         with self.assertRaises(IOError):
-            data_gatherer._callSearchApi(['BRK.A'], Config.API_KEY)
+            data_gatherer._callSearchApi('ABCXYZ', Config.API_KEY)
 
 
 class TestCallDailyAdjustedApi(unittest.TestCase):
 
     def test_generalTicker(self):
-        actual = data_gatherer._callDailyAdjustedApi(['MSFT'], Config.API_KEY)
-        self.assertEqual(len(actual.keys()), 1)
-        self.assertEqual(list(actual)[0], 'MSFT')
-        for k, v in actual['MSFT'].items():
+        actual = data_gatherer._callDailyAdjustedApi('MSFT', Config.API_KEY)
+        for k, v in actual.items():
             self.assertIsInstance(k, int)
             self.assertIsInstance(v, float)
 
     def test_badTicker(self):
         with self.assertRaises(IOError):
-            data_gatherer._callDailyAdjustedApi(['ABCXYZ'], Config.API_KEY)
+            data_gatherer._callDailyAdjustedApi('ABCXYZ', Config.API_KEY)
 
 
 class TestGetAllApiData(unittest.TestCase):
 
     def test_generalTicker(self):
-        actual = data_gatherer._getAllApiData(['MSFT'], Config.API_KEY)
+        actual = data_gatherer._getAllApiData('MSFT', Config.API_KEY)
         expected = {}
         self.assertEqual(len(actual.keys()), 1)
         self.assertEqual(list(actual)[0], 'MSFT')

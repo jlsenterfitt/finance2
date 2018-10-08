@@ -8,7 +8,9 @@ General strategy is:
     4) For all other tickers, async load their files.
 """
 
+import bz2
 import datetime
+import json
 import requests
 import time
 
@@ -62,66 +64,58 @@ def _callApi(request, required_key):
         return result
 
 
-def _callSearchApi(tickers, api_key):
+def _callSearchApi(ticker, api_key):
     """Call the AlphaVantage Search API for a list of tickers.
 
     Args:
-        tickers: Iterable of ticker strings.
+        ticker: Ticker string.
         api_key: String API key for authentication.
     Returns:
-        ticker_data: Dict of tickers to asset names.
+        name: String name of this ticker.
     """
     base_request = 'https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=%s&apikey=%s'
 
-    ticker_data = {}
-    for ticker in tickers:
-        request = base_request % (ticker, api_key)
-        result = _callApi(request, 'bestMatches')
+    request = base_request % (ticker, api_key)
+    result = _callApi(request, 'bestMatches')
 
-        for match in result['bestMatches']:
-            if match['1. symbol'] == ticker:
-                ticker_data[ticker] = match['2. name']
+    for match in result['bestMatches']:
+        if match['1. symbol'] == ticker:
+            return match['2. name']
 
-        if ticker not in ticker_data:
-            raise IOError('Couldn\'t find ticker %s' % ticker)
-
-    return ticker_data
+    raise IOError('Couldn\'t find ticker %s' % ticker)
 
 
-def _callDailyAdjustedApi(tickers, api_key):
+
+def _callDailyAdjustedApi(ticker, api_key):
     """Call the AlphaVantage Daily Adjusted API for a list of tickers.
 
     Args:
-        tickers: Iterable of ticker strings.
+        ticker: Ticker string.
         api_key: String API key for authentication.
     Returns:
-        ticker_data: Dict of tickers (strings) to integer dates (days since
-            epoch), to prices (floats).
+        price_data: Dict of integer dates (days since epoch), to prices
+            (floats).
     """
     base_request = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&outputsize=full&apikey=%s'
     epoch = datetime.datetime.utcfromtimestamp(0)
 
-    ticker_data = {}
-    for ticker in tickers:
-        request = base_request % (ticker, api_key)
-        result = _callApi(request, 'Time Series (Daily)')
+    request = base_request % (ticker, api_key)
+    result = _callApi(request, 'Time Series (Daily)')
 
-        date_dict = {}
-        for date_str, data in result['Time Series (Daily)'].items():
-            date_int = (datetime.datetime.strptime(date_str, '%Y-%m-%d') - epoch).days
-            price_float = float(data['5. adjusted close'])
-            date_dict[date_int] = price_float
+    price_data = {}
+    for date_str, data in result['Time Series (Daily)'].items():
+        date_int = (datetime.datetime.strptime(date_str, '%Y-%m-%d') - epoch).days
+        price_float = float(data['5. adjusted close'])
+        price_data[date_int] = price_float
 
-        ticker_data[ticker] = date_dict
-
-    return ticker_data
+    return price_data
 
 
-def _getAllApiData(tickers, api_key):
+def _getAllApiData(ticker, api_key):
     """Get data from AlphaVantage APIs.
 
     Args:
-        tickers: Iterable of ticker strings.
+        ticker: Ticker string.
         api_key: String API key for authentication.
     Returns:
         ticker_data: Nested dict of data about this ticker.
@@ -134,13 +128,32 @@ def _getAllApiData(tickers, api_key):
                 }
             }
     """
-    search_data = _callSearchApi(tickers, api_key)
-    price_data = _callDailyAdjustedApi(tickers, api_key)
+    name = _callSearchApi(ticker, api_key)
+    price_data = _callDailyAdjustedApi(ticker, api_key)
 
-    ticker_data = {}
-    for ticker in tickers:
-        ticker_data[ticker] = {
-                'name': search_data[ticker],
-                'price_data': price_data[ticker]}
+    ticker_data = {
+        ticker: {
+            'name': name,
+            'price_data': price_data}}
 
     return ticker_data
+
+
+def _getAndCacheApiData(tickers, api_key):
+    """Get API data for all tickers, cache it, and return it.
+
+    Args:
+        tickers: Iterable of ticker strings.
+        api_key: String API key for authentication.
+    Returns:
+        ticker_data: See _getAllApiData for format.
+    """
+    for ticker in tickers:
+        data = _getAllApiData(ticker, api_key)
+        data_json = json.dumps(data)
+        filename = cache_folder + '/' + ticker + '.json.bz2'
+        with bz2.BZ2File(filename, 'wb') as f:
+            f.write(data_json)
+
+    return ticker_data
+
