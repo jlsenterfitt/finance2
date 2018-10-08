@@ -2,7 +2,8 @@
 *.csv
 *.txt
 *.json
-Config.py
+config.py
+cache/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
