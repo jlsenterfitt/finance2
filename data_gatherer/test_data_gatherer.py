@@ -37,7 +37,7 @@ class TestGetAllApiData(unittest.TestCase):
         expected = {}
         self.assertEqual(len(actual.keys()), 1)
         self.assertEqual(list(actual)[0], 'MSFT')
-        self.assertEqual(list(actual['MSFT'].keys()), ['name', 'price_data'])
+        self.assertSetEqual(set(actual['MSFT'].keys()), {'name', 'price_data'})
 
 if __name__ == '__main__':
     unittest.main()
