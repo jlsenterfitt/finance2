@@ -139,21 +139,24 @@ def _getAllApiData(ticker, api_key):
     return ticker_data
 
 
-def _getAndCacheApiData(tickers, api_key):
+def _getAndCacheApiData(tickers, api_key, cache_folder):
     """Get API data for all tickers, cache it, and return it.
 
     Args:
         tickers: Iterable of ticker strings.
         api_key: String API key for authentication.
+        cache_folder: Where to store cache files.
     Returns:
         ticker_data: See _getAllApiData for format.
     """
+    ticker_data = {}
     for ticker in tickers:
         data = _getAllApiData(ticker, api_key)
         data_json = json.dumps(data)
         filename = cache_folder + '/' + ticker + '.json.bz2'
         with bz2.BZ2File(filename, 'wb') as f:
-            f.write(data_json)
+            f.write(data_json.encode())
+        ticker_data.update(data)
 
     return ticker_data
 
