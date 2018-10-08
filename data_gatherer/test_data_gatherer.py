@@ -32,5 +32,14 @@ class TestCallDailyAdjustedApi(unittest.TestCase):
             data_gatherer._callDailyAdjustedApi(['ABCXYZ'], Config.API_KEY)
 
 
+class TestGetAllApiData(unittest.TestCase):
+
+    def test_generalTicker(self):
+        actual = data_gatherer._getAllApiData(['MSFT'], Config.API_KEY)
+        expected = {}
+        self.assertEqual(len(actual.keys()), 1)
+        self.assertEqual(list(actual)[0], 'MSFT')
+        self.assertEqual(list(actual['MSFT'].keys()), ['name', 'price_data'])
+
 if __name__ == '__main__':
     unittest.main()

@@ -115,3 +115,32 @@ def _callDailyAdjustedApi(tickers, api_key):
         ticker_data[ticker] = date_dict
 
     return ticker_data
+
+
+def _getAllApiData(tickers, api_key):
+    """Get data from AlphaVantage APIs.
+
+    Args:
+        tickers: Iterable of ticker strings.
+        api_key: String API key for authentication.
+    Returns:
+        ticker_data: Nested dict of data about this ticker.
+            {
+                ticker<string>: {
+                    'name': name<string>,
+                    'price_data': {
+                        date<int>: price<float>
+                    }
+                }
+            }
+    """
+    search_data = _callSearchApi(tickers, api_key)
+    price_data = _callDailyAdjustedApi(tickers, api_key)
+
+    ticker_data = {}
+    for ticker in tickers:
+        ticker_data[ticker] = {
+                'name': search_data[ticker],
+                'price_data': price_data[ticker]}
+
+    return ticker_data
