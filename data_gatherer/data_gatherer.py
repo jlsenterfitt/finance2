@@ -162,16 +162,20 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
     return ticker_data
 
 
-def getTickerData(tickers, api_key, cache_folder):
+def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     """Get data from APIs or caches for ticker data.
 
     Args:
         tickers: Iterable of ticker strings.
         api_key: String API key for authentication.
         cache_folder: Where to store cache files.
-   Returns:
+        refresh_strategy: Whether to updated "outdated", "all", or "none" of
+            the tickers.
+    Returns:
         ticker_data: See _getAllApiData for format.
     """
+    ticker_data = None
+    if refresh_strategy='all':
+        return _getAndCacheApiData(tickers, api_key, cache_folder)
     # TODO: Add ability to read cache files.
-    return _getAndCacheApiData(tickers, api_key, cache_folder)
 
