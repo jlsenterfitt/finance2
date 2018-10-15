@@ -15,6 +15,9 @@ import requests
 import time
 
 
+local_cache = {}
+
+
 def _callApi(request, required_key):
     """Call a given AlphaVantage API with controlled retries until successful.
 
@@ -24,6 +27,9 @@ def _callApi(request, required_key):
     Returns:
         result: A partially validated response.
     """
+    if request in local_cache:
+        return local_cache[request]
+
     attempts = 0
     aggregated_results = {}
     while True:
@@ -60,6 +66,8 @@ def _callApi(request, required_key):
         if required_key not in result:
             aggregated_results.update(result)
             continue
+
+        local_cache[request] = result
 
         return result
 

@@ -2,6 +2,7 @@
 
 from . import data_gatherer
 import config
+import os
 import unittest
 
 
@@ -34,10 +35,19 @@ class TestGetAllApiData(unittest.TestCase):
 
     def test_generalTicker(self):
         actual = data_gatherer._getAllApiData('MSFT', config.API_KEY)
-        expected = {}
         self.assertEqual(len(actual.keys()), 1)
         self.assertEqual(list(actual)[0], 'MSFT')
         self.assertSetEqual(set(actual['MSFT'].keys()), {'name', 'price_data'})
+
+
+class TestWriteCache(unittest.TestCase):
+
+    def test_generalTicker(self):
+        if os.path.isfile('cache/MSFT.json.bz2'):
+            os.remove('cache/MSFT.json.bz2')
+        data_gatherer._getAndCacheApiData(['MSFT'], config.API_KEY, 'cache/')
+        self.assertTrue(os.path.isfile('cache/MSFT.json.bz2'))
+
 
 if __name__ == '__main__':
     unittest.main()
