@@ -150,7 +150,8 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
         ticker_data: See _getAllApiData for format.
     """
     ticker_data = {}
-    for ticker in tickers:
+    for t, ticker in enumerate(tickers):
+        print('Getting ticker %s (%d/%d)' % (ticker, t + 1, len(tickers)))
         data = _getAllApiData(ticker, api_key)
         data_json = json.dumps(data)
         filename = cache_folder + '/' + ticker + '.json.bz2'
@@ -159,4 +160,18 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
         ticker_data.update(data)
 
     return ticker_data
+
+
+def getTickerData(tickers, api_key, cache_folder):
+    """Get data from APIs or caches for ticker data.
+
+    Args:
+        tickers: Iterable of ticker strings.
+        api_key: String API key for authentication.
+        cache_folder: Where to store cache files.
+   Returns:
+        ticker_data: See _getAllApiData for format.
+    """
+    # TODO: Add ability to read cache files.
+    return _getAndCacheApiData(tickers, api_key, cache_folder)
 
