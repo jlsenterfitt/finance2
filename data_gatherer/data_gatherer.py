@@ -175,7 +175,7 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
         ticker_data: See _getAllApiData for format.
     """
     ticker_data = None
-    if refresh_strategy='all':
+    if refresh_strategy=='all':
         return _getAndCacheApiData(tickers, api_key, cache_folder)
     # TODO: Add ability to read cache files.
 
