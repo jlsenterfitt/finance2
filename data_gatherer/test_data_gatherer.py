@@ -57,7 +57,7 @@ class TestReadCache(unittest.TestCase):
 
     def test_generalTicker(self):
         data_gatherer._getAndCacheApiData(['MSFT'], config.API_KEY, 'cache')
-        actual = data_gatherer._readCacheFile('MSFT', 'cache')
+        actual = data_gatherer._readCacheFile('cache/MSFT.json.bz2')
         _validateDataFormat(self, actual)
 
 

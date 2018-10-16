@@ -11,6 +11,8 @@ General strategy is:
 import bz2
 import datetime
 import json
+from multiprocessing.dummy import Pool
+import os
 import requests
 import time
 
@@ -170,20 +172,62 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
     return ticker_data
 
 
-def _readCacheFile(ticker, cache_folder):
+def _readCacheFile(filename):
     """Read a single cached file.
 
     Args:
-        ticker: Single ticker string to read.
-        cache_folder: Where to read cache files.
+        filename: String name of a file to read.
     Returns:
         ticker_data: See _getAllApiData for format.
     """
-    filename = cache_folder + '/' + ticker + '.json.bz2'
     with bz2.BZ2File(filename, 'rb') as f:
         byte_data = f.read()
         decoded_data = byte_data.decode()
         ticker_data = json.loads(decoded_data)
+    return ticker_data
+
+
+def _getCachedFiles(tickers, cache_folder, max_age):
+    """Get a list of cache files newer than max_age.
+
+    Args:
+        tickers: Iterable of ticker strings.
+        cache_folder: Where to read cache files.
+        max_age: Max number of days to allow for cache, or None for no max age.
+    Returns:
+        cached_ticker_list: List of ticker strings with a valid cache.
+    """
+    cached_ticker_list = []
+    for ticker in tickers:
+        filename = cache_folder + '/' + ticker + '.json.bz2'
+
+        if not os.path.isfile(filename):
+            continue
+
+        days_since_modified = (
+            time.time() - os.path.getmtime(filename)) / (24 * 60 * 60)
+
+        if max_age == None or days_since_modified < max_age:
+            cached_ticker_list.append(ticker)
+
+    return cached_ticker_list
+
+
+def _readCacheFiles(tickers, cache_folder):
+    """Read all cached files.
+
+    Args:
+        tickers: Iterable of ticker strings.
+        cache_folder: Where to store cache files.
+    Returns:
+        ticker_data: See _getAllApiData for format.
+    """
+    ticker_data = {}
+    print('Reading %d files from cache.' % len(tickers))
+    for ticker in tickers:
+        ticker_data.update(
+            _readCacheFile(cache_folder + '/' + ticker + '.json.bz2'))
+
     return ticker_data
 
 
@@ -200,7 +244,24 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
         ticker_data: See _getAllApiData for format.
     """
     ticker_data = None
-    if refresh_strategy=='all':
+    cached_files = []
+    if refresh_strategy == 'all':
         return _getAndCacheApiData(tickers, api_key, cache_folder)
-    # TODO: Add ability to read cache files.
+    elif refresh_strategy == 'none':
+        cached_files = _getCachedFiles(tickers, cache_folder, None)
+    else:
+        cached_files = _getCachedFiles(tickers, cache_folder, 30)
 
+    uncached_files = set(tickers) - set(cached_files)
+
+    pool = Pool()
+
+    api_result = pool.apply_async(
+        _getAndCacheApiData, (uncached_files, api_key, cache_folder))
+    file_result = pool.apply_async(
+        _readCacheFiles, (cached_files, cache_folder))
+
+    ticker_data = api_result.get()
+    ticker_data.update(file_result.get())
+
+    return ticker_data

@@ -16,7 +16,7 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
-    data_gatherer.getTickerData(
+    ticker_data = data_gatherer.getTickerData(
         set(config.TICKER_DICT.keys()),
         config.API_KEY,
         'cache',
