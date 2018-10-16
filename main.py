@@ -19,7 +19,7 @@ def main():
     data_gatherer.getTickerData(
         set(config.TICKER_DICT.keys()),
         config.API_KEY,
-        'cache/',
+        'cache',
         args.refresh_strategy)
 
 

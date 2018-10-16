@@ -170,6 +170,23 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
     return ticker_data
 
 
+def _readCacheFile(ticker, cache_folder):
+    """Read a single cached file.
+
+    Args:
+        ticker: Single ticker string to read.
+        cache_folder: Where to read cache files.
+    Returns:
+        ticker_data: See _getAllApiData for format.
+    """
+    filename = cache_folder + '/' + ticker + '.json.bz2'
+    with bz2.BZ2File(filename, 'rb') as f:
+        byte_data = f.read()
+        decoded_data = byte_data.decode()
+        ticker_data = json.loads(decoded_data)
+    return ticker_data
+
+
 def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     """Get data from APIs or caches for ticker data.
 

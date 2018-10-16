@@ -6,6 +6,12 @@ import os
 import unittest
 
 
+def _validateDataFormat(self, data):
+    self.assertEqual(len(data.keys()), 1)
+    self.assertEqual(list(data)[0], 'MSFT')
+    self.assertSetEqual(set(data['MSFT'].keys()), {'name', 'price_data'})
+
+
 class TestCallSearchApi(unittest.TestCase):
 
     def test_generalTicker(self):
@@ -35,9 +41,7 @@ class TestGetAllApiData(unittest.TestCase):
 
     def test_generalTicker(self):
         actual = data_gatherer._getAllApiData('MSFT', config.API_KEY)
-        self.assertEqual(len(actual.keys()), 1)
-        self.assertEqual(list(actual)[0], 'MSFT')
-        self.assertSetEqual(set(actual['MSFT'].keys()), {'name', 'price_data'})
+        _validateDataFormat(self, actual)
 
 
 class TestWriteCache(unittest.TestCase):
@@ -45,8 +49,16 @@ class TestWriteCache(unittest.TestCase):
     def test_generalTicker(self):
         if os.path.isfile('cache/MSFT.json.bz2'):
             os.remove('cache/MSFT.json.bz2')
-        data_gatherer._getAndCacheApiData(['MSFT'], config.API_KEY, 'cache/')
+        data_gatherer._getAndCacheApiData(['MSFT'], config.API_KEY, 'cache')
         self.assertTrue(os.path.isfile('cache/MSFT.json.bz2'))
+
+
+class TestReadCache(unittest.TestCase):
+
+    def test_generalTicker(self):
+        data_gatherer._getAndCacheApiData(['MSFT'], config.API_KEY, 'cache')
+        actual = data_gatherer._readCacheFile('MSFT', 'cache')
+        _validateDataFormat(self, actual)
 
 
 if __name__ == '__main__':
