@@ -255,11 +255,11 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     uncached_files = set(tickers) - set(cached_files)
 
     pool = Pool()
-
     api_result = pool.apply_async(
         _getAndCacheApiData, (uncached_files, api_key, cache_folder))
     file_result = pool.apply_async(
         _readCacheFiles, (cached_files, cache_folder))
+    pool.close()
 
     ticker_data = api_result.get()
     ticker_data.update(file_result.get())

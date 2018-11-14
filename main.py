@@ -16,6 +16,7 @@ parser.add_argument(
 def main():
     args = parser.parse_args()
 
+    # Load full, unfiltered, and less than 1 month old data.
     ticker_data = data_gatherer.getTickerData(
         set(config.TICKER_DICT.keys()),
         config.API_KEY,
