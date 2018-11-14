@@ -188,7 +188,7 @@ def _readCacheFile(filename):
 
 
 def _getCachedFiles(tickers, cache_folder, max_age):
-    """Get a list of cache files newer than max_age.
+    """Get a sorted list of cache files newer than max_age.
 
     Args:
         tickers: Iterable of ticker strings.
@@ -197,7 +197,7 @@ def _getCachedFiles(tickers, cache_folder, max_age):
     Returns:
         cached_ticker_list: List of ticker strings with a valid cache.
     """
-    cached_ticker_list = []
+    unsorted_list = []
     for ticker in tickers:
         filename = cache_folder + '/' + ticker + '.json.bz2'
 
@@ -208,7 +208,13 @@ def _getCachedFiles(tickers, cache_folder, max_age):
             time.time() - os.path.getmtime(filename)) / (24 * 60 * 60)
 
         if max_age == None or days_since_modified < max_age:
-            cached_ticker_list.append(ticker)
+            unsorted_list.append((days_since_modified, ticker))
+
+    sorted_list = sorted(unsorted_list)
+
+    cached_ticker_list = []
+    for _, ticker in sorted_list:
+        cached_ticker_list.append(ticker)
 
     return cached_ticker_list
 
@@ -251,6 +257,11 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
         cached_files = _getCachedFiles(tickers, cache_folder, None)
     else:
         cached_files = _getCachedFiles(tickers, cache_folder, 30)
+
+        # Ensure at least 5 tickers are refreshed with each call.
+        num_to_refresh = 5 - min(5, len(tickers) - len(cached_files))
+        for _ in range(num_to_refresh):
+            cached_files.pop()
 
     uncached_files = set(tickers) - set(cached_files)
 
