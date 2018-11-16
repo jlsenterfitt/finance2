@@ -3,7 +3,7 @@
 import argparse
 import config
 from data_gatherer import data_gatherer
-
+from datetime import date
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -11,6 +11,12 @@ parser.add_argument(
     choices=['outdated', 'none', 'all'],
     default='outdated',
     help='What tickers to update.')
+parser.add_argument(
+    '--set_dates',
+    help='What date to run the optimizer every 3 months from.')
+parser.add_argument(
+    '--set_date',
+    help='A single date to run the optimizer for.')
 
 
 def main():
