@@ -15,3 +15,42 @@ General strategy is:
         #2 with the current allocation and new trade amount.
     7) Once a lower limit of trade amount is found, return the allocaiton.
 """
+
+
+def _scoreAllocation(data_matrix, allocation_array, required_return):
+    """Determine the score of a given allocation.
+
+    Args:
+        data_matrix: See _convertTickerDataToMatrix.
+        allocation_array: An array of percent allocations.
+        required_return: What daily return is desired.
+    Returns:
+        score: A modified Sortino Ratio for the allocation.
+    """
+    pass
+
+
+def _findOptimalAllocation(data_matrix, ticker_tuple, required_return):
+    """Find the optimal allocation.
+
+    Args:
+         data_matrix: Rows = days, columns = tickers, values = % price changes.
+            Tickers are ordered alphabetically.
+        ticker_tuple: Tuple of tickers in the matrix, in the same order.
+        required_return: What daily return is desired.
+    Returns:
+        allocations: Dict of percent allocations by ticker.
+    """
+    pass
+
+
+def getOptimalAllocation(data_matrix, required_return):
+    """Find the optimal allocation based on requirements.   
+
+    Args:
+        data_matrix: See _convertTickerDataToMatrix.
+        required_return: What daily return is desired.
+    Returns:
+        allocations: Dict of percent allocations by ticker.
+    """
+    pass
