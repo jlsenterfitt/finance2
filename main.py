@@ -12,7 +12,7 @@ parser.add_argument(
     default='outdated',
     help='What tickers to update.')
 parser.add_argument(
-    '--set_dates',
+    '--set_start_date',
     help='What date to run the optimizer every 3 months from.')
 parser.add_argument(
     '--set_date',
@@ -28,6 +28,20 @@ def main():
         config.API_KEY,
         'cache',
         args.refresh_strategy)
+
+    # Run the optimizer for required date(s).
+    allocation_map = {}
+    if args.set_start_date:
+        pass
+    elif args.set_date:
+        pass
+    else:
+        pass
+
+    # Calculate trades for the most recent optimization.
+    trades = []
+
+    # Run the backtester across all optimizations.
 
 
 if __name__ == '__main__':
