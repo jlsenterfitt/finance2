@@ -31,11 +31,20 @@ def main():
 
     # Run the optimizer for required date(s).
     allocation_map = {}
+    epoch = datetime.datetime.utcfromtimestamp(0)
     if args.set_start_date:
+        start_date_int = (datetime.datetime.strptime(args.set_start_date, '%Y-%m-%d') - epoch).days
+        today_int = (datetime.datetime.now() - epoch).days
+        while start_date_int < today_int:
+            # Do somoething.
+            # Add ~3 months of trading days.
+            start_date_int += config.TRADING_DAYS_PER_YEAR / 4
         pass
     elif args.set_date:
+        date_int = (datetime.datetime.strptime(args.set_date, '%Y-%m-%d') - epoch).days
         pass
     else:
+        date_int = (datetime.datetime.now() - epoch).days
         pass
 
     # Calculate trades for the most recent optimization.
