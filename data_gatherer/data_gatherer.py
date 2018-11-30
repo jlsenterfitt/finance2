@@ -92,6 +92,7 @@ def _callSearchApi(ticker, api_key):
         if match['1. symbol'] == ticker:
             return match['2. name']
 
+    print(result)
     raise IOError('Couldn\'t find ticker %s' % ticker)
 
 
