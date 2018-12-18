@@ -1,5 +1,5 @@
 """Convert ticker_data to a data_matrix for processing."""
-
+import functools
 
 def _removeFutureData(ticker_data, end_date):
     """Remove data on or after a given date in place.
@@ -28,7 +28,18 @@ def _removeLowDataTickers(ticker_data, required_num_days):
 
 def _removeLowDataDays(ticker_data):
     """Remove any days of data with one or more tickers missing, in place."""
-    pass
+    # Initialize dates as whatever an arbitrary ticker has.
+    date_set = set(list(ticker_data.values())[0]['price_data'].keys())
+
+    # Determine what dates are common to all tickers.
+    for ticker, data in ticker_data.items():
+        curr_date_set = set(data['price_data'].keys())
+        date_set = date_set.intersection(curr_date_set)
+
+    for ticker, data in ticker_data.items():
+        remove_keys = set(data['price_data'].keys()) - date_set
+        for remove_key in remove_keys:
+            del data['price_data'][remove_key]
 
 
 def _calculatePriceChanges(ticker_data):

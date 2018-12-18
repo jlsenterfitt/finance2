@@ -49,5 +49,27 @@ class TestRemoveLowDataTickers(unittest.TestCase):
         self.assertSetEqual(set(test_data.keys()), set(('fake2',)))
 
 
+class TestRemoveLowDataDays(unittest.TestCase):
+    
+    def test_basic(self):
+        test_data = {
+                'fake1': {
+                    'price_data': {
+                        0: 0
+                        }
+                    },
+                'fake2': {
+                    'price_data': {
+                        0: 0,
+                        1: 1
+                        }
+                    }
+                }
+        data_cleaner._removeLowDataDays(test_data)
+
+        self.assertSetEqual(set(test_data['fake1']['price_data'].keys()), set((0,)))
+        self.assertSetEqual(set(test_data['fake2']['price_data'].keys()), set((0,)))
+
+
 if __name__ == '__main__':
     unittest.main()
