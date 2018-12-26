@@ -1,5 +1,6 @@
 """Convert ticker_data to a data_matrix for processing."""
 import functools
+import numpy as np
 
 def _removeFutureData(ticker_data, end_date):
     """Remove data on or after a given date in place.
@@ -42,20 +43,34 @@ def _removeLowDataDays(ticker_data):
             del data['price_data'][remove_key]
 
 
-def _calculatePriceChanges(ticker_data):
+def _convertToMatrix(ticker_data):
     """Calculate data matrix from ticker data.
 
     Args:
         ticker_data: Data from the data_gatherer module.
     Returns:    
-        data_matrix: Rows = days, columns = tickers, values = % price changes.
+        return_matrix: Rows = days, columns = tickers, values = % price changes.
             Tickers are ordered alphabetically.
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
     """
-    pass
+    # TODO: This should incorporate expense ratios.
+    ticker_tuple = tuple(sorted(ticker_data.keys()))
+
+    # Generate a 2-d array of raw prices.
+    raw_price_list = []
+    for ticker in ticker_tuple:
+        new_row = []
+        for date in sorted(ticker_data[ticker]['price_data'].keys()):
+            new_row.append(ticker_data[ticker]['price_data'][date])
+        raw_price_list.append(new_row)
+    raw_price_array = np.array(raw_price_list, dtype=np.float64).transpose()
+
+    return_matrix = raw_price_array[1:] / raw_price_array[:-1]
+
+    return (ticker_tuple, return_matrix)
 
 
-def convertTickerDataToMatrix(ticker_data, required_num_days, end_date):
+def cleanAndConvertData(ticker_data, required_num_days, end_date):
     """Convert ticker data to a matrix for numpy processing.
 
     Args:
