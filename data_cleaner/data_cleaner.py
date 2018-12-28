@@ -82,5 +82,10 @@ def cleanAndConvertData(ticker_data, required_num_days, end_date):
             Tickers are ordered alphabetically.
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
     """
-    pass
+    _removeFutureData(ticker_data, end_date)
 
+    _removeLowDataTickers(ticker_data, required_num_days)
+
+    _removeLowDataDays(ticker_data)
+
+    return _convertToMatrix(ticker_data)

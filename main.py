@@ -1,9 +1,11 @@
 """Module to call other functions, and handle flags."""
 
 import argparse
+from copy import deepcopy
 import config
+from data_cleaner import data_cleaner
 from data_gatherer import data_gatherer
-from datetime import date
+import datetime
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -11,6 +13,10 @@ parser.add_argument(
     choices=['outdated', 'none', 'all'],
     default='outdated',
     help='What tickers to update.')
+parser.add_argument(
+    '--required_num_days',
+    type=int, help='How many days are required.',
+    default=config.TRADING_DAYS_PER_YEAR)
 parser.add_argument(
     '--set_start_date',
     help='What date to run the optimizer every 3 months from.')
@@ -36,16 +42,15 @@ def main():
         start_date_int = (datetime.datetime.strptime(args.set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
         while start_date_int < today_int:
-            # Do somoething.
+            data_matrix = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, start_date_int)
             # Add ~3 months of trading days.
             start_date_int += config.TRADING_DAYS_PER_YEAR / 4
-        pass
     elif args.set_date:
         date_int = (datetime.datetime.strptime(args.set_date, '%Y-%m-%d') - epoch).days
-        pass
+        data_matrix = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
     else:
         date_int = (datetime.datetime.now() - epoch).days
-        pass
+        data_matrix = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
 
     # Calculate trades for the most recent optimization.
     trades = []

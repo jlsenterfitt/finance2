@@ -262,7 +262,8 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
         # Ensure at least 5 tickers are refreshed with each call.
         num_to_refresh = 5 - min(5, len(tickers) - len(cached_files))
         for _ in range(num_to_refresh):
-            cached_files.pop()
+            if cached_files:
+                cached_files.pop()
 
     uncached_files = set(tickers) - set(cached_files)
 
