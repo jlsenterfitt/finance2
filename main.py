@@ -6,6 +6,7 @@ import config
 from data_cleaner import data_cleaner
 from data_gatherer import data_gatherer
 import datetime
+import math
 from optimizer import optimizer
 
 parser = argparse.ArgumentParser()
@@ -35,6 +36,7 @@ def main():
 
     if not args.required_return:
         raise ValueError('Need to set required return')
+    daily_return = math.pow(args.required_return, 1 / config.TRADING_DAYS_PER_YEAR)
 
     # Load full, unfiltered, and less than 1 month old data.
     ticker_data = data_gatherer.getTickerData(
@@ -61,7 +63,8 @@ def main():
     else:
         date_int = (datetime.datetime.now() - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
-        allocation = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, args.required_return)
+        allocation = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
+        print(allocation)
 
     # Calculate trades for the most recent optimization.
     trades = []

@@ -12,6 +12,7 @@ General strategy is:
         #2 with the current allocation and new trade amount.
     6) Once a lower limit of trade amount is found, return the allocaiton.
 """
+import functools
 import multiprocessing as mp
 import numpy as np
 from scipy.stats.mstats import gmean
@@ -89,7 +90,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
 
         best = np.zeros(len(ticker_tuple), dtype=np.float64)
         best[0] = 1.0
-        best_score = _scoreAllocation(best, required_return)
+        best_score = _scoreAllocation(best, required_return)['score']
 
         trading_increment = 1.0
 
@@ -110,9 +111,15 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
 
             # TODO: Test different chunksizes.
             results = pool.map(_unwrapAndScore, map_iterable, 1)
-
-            # Filter to best result.
+            best_result = functools.reduce(
+                    lambda x, y: x if x['score'] > y['score'] else y,
+                    results,
+                    {'score': -float('inf')})
         
-            # If no improvement, halve trade amount.
+            if best_result['score'] > best_score:
+                best = best_result['allocation_array']
+                best_score = best_result['score']
+            else:
+                trading_increment /= 2.0
     
-    # Return optimal allocation.
+    return (best_score, best)
