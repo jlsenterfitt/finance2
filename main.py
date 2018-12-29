@@ -6,6 +6,7 @@ import config
 from data_cleaner import data_cleaner
 from data_gatherer import data_gatherer
 import datetime
+from optimizer import optimizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -18,6 +19,10 @@ parser.add_argument(
     type=int, help='How many days are required.',
     default=config.TRADING_DAYS_PER_YEAR)
 parser.add_argument(
+    '--required_return',
+    type=float,
+    help='What return to require.')
+parser.add_argument(
     '--set_start_date',
     help='What date to run the optimizer every 3 months from.')
 parser.add_argument(
@@ -27,6 +32,9 @@ parser.add_argument(
 
 def main():
     args = parser.parse_args()
+
+    if not args.required_return:
+        raise ValueError('Need to set required return')
 
     # Load full, unfiltered, and less than 1 month old data.
     ticker_data = data_gatherer.getTickerData(
@@ -42,15 +50,18 @@ def main():
         start_date_int = (datetime.datetime.strptime(args.set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
         while start_date_int < today_int:
-            data_matrix = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, start_date_int)
+            (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, start_date_int)
+            # TODO: Actually do something here.
             # Add ~3 months of trading days.
             start_date_int += config.TRADING_DAYS_PER_YEAR / 4
     elif args.set_date:
         date_int = (datetime.datetime.strptime(args.set_date, '%Y-%m-%d') - epoch).days
-        data_matrix = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
+        (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
+        # TODO: Actually do something here.
     else:
         date_int = (datetime.datetime.now() - epoch).days
-        data_matrix = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
+        (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
+        allocation = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, args.required_return)
 
     # Calculate trades for the most recent optimization.
     trades = []

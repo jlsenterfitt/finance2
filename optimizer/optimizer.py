@@ -23,6 +23,10 @@ def _initializeProcess(data):
     data_matrix = data
 
 
+def _unwrapAndScore(**kwargs):
+    return _scoreAllocation(kwargs['allocation_array'], kwargs['required_return'])
+
+
 def _scoreAllocation(allocation_array, required_return):
     """Determine the score of a given allocation.
 
@@ -76,18 +80,39 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
     Returns:
         allocations: Dict of percent allocations by ticker.
     """
+    # Initialize global data for master.
     _initializeProcess(data_matrix)
 
     with mp.Pool(
             initializer=_initializeProcess,
-            initArgs=(data_matrix,)) as pool:
+            initargs=(data_matrix,)) as pool:
 
         best = np.zeros(len(ticker_tuple), dtype=np.float64)
         best[0] = 1.0
-        best_score = _scoreAllocation(ticker_tuple, required_return)
+        best_score = _scoreAllocation(best, required_return)
 
-        # Create deviations from starting point, filter them, send through queues.
-        # Collect results, keep best.
-        # If no improvement, halve trade amount.
-        # Repeat until trade amount is exhausted.
+        trading_increment = 1.0
+
+        # TODO: Remove magic number.
+        while trading_increment > 1 / 1024:
+            map_iterable = []
+            for sell_id in range(len(ticker_tuple)):
+                if best[sell_id] < trading_increment: continue
+
+                for buy_id in range(len(ticker_tuple)):
+                    if buy_id == sell_id: continue
+
+                    curr = np.copy(best)
+                    curr[sell_id] -= trading_increment
+                    curr[buy_id] += trading_increment
+
+                    map_iterable.append({'allocation_array': curr, 'required_return': required_return})
+
+            # TODO: Test different chunksizes.
+            results = pool.map(_unwrapAndScore, map_iterable, 1)
+
+            # Filter to best result.
+        
+            # If no improvement, halve trade amount.
     
+    # Return optimal allocation.
