@@ -94,7 +94,6 @@ def _callSearchApi(ticker, api_key):
         if match['1. symbol'] == ticker:
             return match['2. name']
 
-    print(result)
     raise IOError('Couldn\'t find ticker %s' % ticker)
 
 
@@ -166,10 +165,10 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
     for t, ticker in enumerate(tickers):
         print('Getting ticker %s (%d/%d)' % (ticker, t + 1, len(tickers)))
         data = _getAllApiData(ticker, api_key)
-        data_encoded = json.dumps(data)
-        filename = cache_folder + '/' + ticker + '.encoded.bz2'
+        data_json = json.dumps(data)
+        filename = cache_folder + '/' + ticker + '.json.bz2'
         with bz2.BZ2File(filename, 'wb') as f:
-            f.write(data_encoded.encode())
+            f.write(data_json.encode())
         ticker_data.update(data)
 
     return ticker_data
@@ -212,7 +211,7 @@ def _getCachedFiles(tickers, cache_folder, max_age):
     """
     unsorted_list = []
     for ticker in tickers:
-        filename = cache_folder + '/' + ticker + '.encoded.bz2'
+        filename = cache_folder + '/' + ticker + '.json.bz2'
 
         if not os.path.isfile(filename):
             continue
@@ -246,7 +245,7 @@ def _readCacheFiles(tickers, cache_folder):
     for ticker in tickers:
         print('Reading %s from cache.' % ticker)
         ticker_data.update(
-            _readCacheFile(cache_folder + '/' + ticker + '.encoded.bz2'))
+            _readCacheFile(cache_folder + '/' + ticker + '.json.bz2'))
 
     return ticker_data
 
