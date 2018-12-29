@@ -14,6 +14,8 @@ General strategy is:
 """
 import multiprocessing as mp
 import numpy as np
+from scipy.stats.mstats import gmean
+
 
 def _initializeProcess(data):
     """Initialize a process with necessary data."""
@@ -31,7 +33,36 @@ def _scoreAllocation(allocation_array, required_return):
     Returns:
         score: A modified Sortino Ratio for the allocation.
     """
-    pass
+    daily_returns = np.matmul(data_matrix, allocation_array)
+    mean_return = gmean(daily_returns)
+
+    # Short-circuit score calculation when mean_return < required_return.
+    # Otherwise, with a negative denominator, the code will push for a
+    # large denominator to maximize the overall score.
+    if mean_return < required_return:
+        return {
+                'score': mean_return - required_return,
+                'allocation_array': allocation_array}
+
+    filtered_returns = np.copy(daily_returns)
+    filtered_returns -= required_return
+    filtered_returns = np.clip(filtered_returns, None, 0)
+    filtered_returns *= filtered_returns
+    downside_risk = np.sqrt(filtered_returns.mean())
+
+    below_desired = daily_returns < required_return
+    filtered_returns = [
+        data_matrix[x]
+        for x in range(len(below_desired)) if below_desired[x]]
+    downside_correl = np.matmul(
+        np.matmul(
+            allocation_array,
+            np.corrcoef(filtered_returns, rowvar=False)),
+        allocation_array)
+
+    return {
+            'score': (mean_return - required_return) / (downside_risk * downside_correl),
+            'allocation_array': allocation_array}
 
 
 def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
@@ -51,7 +82,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
             initializer=_initializeProcess,
             initArgs=(data_matrix,)) as pool:
 
-        best = np.zeros(len(ticker_tuple), dtype=float64)
+        best = np.zeros(len(ticker_tuple), dtype=np.float64)
         best[0] = 1.0
         best_score = _scoreAllocation(ticker_tuple, required_return)
 
