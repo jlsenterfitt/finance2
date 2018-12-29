@@ -63,8 +63,9 @@ def main():
     else:
         date_int = (datetime.datetime.now() - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
-        allocation = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
-        print(allocation)
+        (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
+        print(allocation_map)
+        print(best_score)
 
     # Calculate trades for the most recent optimization.
     trades = []

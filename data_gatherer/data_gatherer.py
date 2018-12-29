@@ -10,7 +10,9 @@ General strategy is:
 
 import bz2
 import datetime
+from copy import deepcopy
 import json
+import math
 from multiprocessing.dummy import Pool
 import os
 import requests
@@ -164,10 +166,10 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
     for t, ticker in enumerate(tickers):
         print('Getting ticker %s (%d/%d)' % (ticker, t + 1, len(tickers)))
         data = _getAllApiData(ticker, api_key)
-        data_json = json.dumps(data)
-        filename = cache_folder + '/' + ticker + '.json.bz2'
+        data_encoded = json.dumps(data)
+        filename = cache_folder + '/' + ticker + '.encoded.bz2'
         with bz2.BZ2File(filename, 'wb') as f:
-            f.write(data_json.encode())
+            f.write(data_encoded.encode())
         ticker_data.update(data)
 
     return ticker_data
@@ -183,8 +185,18 @@ def _readCacheFile(filename):
     """
     with bz2.BZ2File(filename, 'rb') as f:
         byte_data = f.read()
-        decoded_data = byte_data.decode()
-        ticker_data = json.loads(decoded_data)
+    decoded_data = byte_data.decode()
+    ticker_data = json.loads(decoded_data)
+
+    # JSON cannot have non-string keys, so convert dates back to int.
+    for ticker in ticker_data:
+        date_strings = set(ticker_data[ticker]['price_data'].keys())
+        
+        price_data = ticker_data[ticker]['price_data']
+        for date_string in date_strings:
+            price_data[int(date_string)] = price_data[date_string]
+            del price_data[date_string]
+
     return ticker_data
 
 
@@ -200,7 +212,7 @@ def _getCachedFiles(tickers, cache_folder, max_age):
     """
     unsorted_list = []
     for ticker in tickers:
-        filename = cache_folder + '/' + ticker + '.json.bz2'
+        filename = cache_folder + '/' + ticker + '.encoded.bz2'
 
         if not os.path.isfile(filename):
             continue
@@ -232,8 +244,9 @@ def _readCacheFiles(tickers, cache_folder):
     ticker_data = {}
     print('Reading %d files from cache.' % len(tickers))
     for ticker in tickers:
+        print('Reading %s from cache.' % ticker)
         ticker_data.update(
-            _readCacheFile(cache_folder + '/' + ticker + '.json.bz2'))
+            _readCacheFile(cache_folder + '/' + ticker + '.encoded.bz2'))
 
     return ticker_data
 
@@ -259,20 +272,25 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     else:
         cached_files = _getCachedFiles(tickers, cache_folder, 30)
 
-        # Ensure at least 5 tickers are refreshed with each call.
-        num_to_refresh = 5 - min(5, len(tickers) - len(cached_files))
-        for _ in range(num_to_refresh):
+        # Assume we will run daily.
+        # Ensure at least 1/25 of tickers are refreshed with each call.
+        min_refresh = math.ceil(len(tickers) / 25)
+        min_refresh -= (len(tickers) - len(cached_files))
+        min_refresh = max(min_refresh, 0)
+        for _ in range(min_refresh):
             if cached_files:
                 cached_files.pop()
 
     uncached_files = set(tickers) - set(cached_files)
 
-    pool = Pool()
-    api_result = pool.apply_async(
+    pool1 = Pool(1)
+    pool2 = Pool(2)
+    api_result = pool1.apply_async(
         _getAndCacheApiData, (uncached_files, api_key, cache_folder))
-    file_result = pool.apply_async(
+    file_result = pool2.apply_async(
         _readCacheFiles, (cached_files, cache_folder))
-    pool.close()
+    pool1.close()
+    pool2.close()
 
     ticker_data = api_result.get()
     ticker_data.update(file_result.get())

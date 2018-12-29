@@ -11,7 +11,7 @@ def _removeFutureData(ticker_data, end_date):
     """
     for ticker in ticker_data:
         for date_int in set(ticker_data[ticker]['price_data'].keys()):
-            if int(date_int) >= end_date:
+            if date_int >= end_date:
                 del ticker_data[ticker]['price_data'][date_int]
 
 

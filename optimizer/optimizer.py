@@ -121,5 +121,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
                 best_score = best_result['score']
             else:
                 trading_increment /= 2.0
-    
-    return (best_score, best)
+   
+    allocation_map = {ticker_tuple[i]: best[i] for i in range(len(ticker_tuple))}
+
+    return (best_score, allocation_map)
