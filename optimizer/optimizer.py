@@ -23,8 +23,8 @@ def _initializeProcess(data):
     data_matrix = data
 
 
-def _unwrapAndScore(**kwargs):
-    return _scoreAllocation(kwargs['allocation_array'], kwargs['required_return'])
+def _unwrapAndScore(data_dict):
+    return _scoreAllocation(data_dict['allocation_array'], data_dict['required_return'])
 
 
 def _scoreAllocation(allocation_array, required_return):
