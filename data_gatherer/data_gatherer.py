@@ -243,7 +243,6 @@ def _readCacheFiles(tickers, cache_folder):
     ticker_data = {}
     print('Reading %d files from cache.' % len(tickers))
     for ticker in tickers:
-        print('Reading %s from cache.' % ticker)
         ticker_data.update(
             _readCacheFile(cache_folder + '/' + ticker + '.json.bz2'))
 
