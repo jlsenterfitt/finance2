@@ -11,3 +11,40 @@ General strategy is:
             underweight the sell is.
     4) Return the trades in order.
 """
+
+
+def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
+    """Create an array of backtested returns for the given allocation map.
+
+    Args:
+        allocation_map: Map of tickers to allocation percentages.
+        data_matrix: Rows = days, columns = tickers, values = % price changes.
+        ticker_tuple: Tuple of tickers in the matrix, in the same order.
+    Returns:
+        return_array: Array of backtested returns.
+    """
+    pass
+
+
+def _getPortfolioCorrelation(portfolio_1_returns, portfolio_2_returns):
+    """Calculate the correlation between two portfolios.
+
+    Args:
+        portfolio_1_returns: Array of backtested returns.
+        portfolio_2_returns: Array of backtested returns.
+    Returns:
+        correlation: The correlation between the portfolios.
+    """
+    pass
+
+
+def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple, data_matrix):
+    """Calculate correlation for all potential trades.
+
+    Args:
+        desired_allocation_map: Map of tickers to allocation percentages.
+        actual_allocation_map: Map of tickers to allocation percentages.
+        data_matrix: Rows = days, columns = tickers, values = % price changes.
+        ticker_tuple: Tuple of tickers in the matrix, in the same order.
+   """
+   pass
