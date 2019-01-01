@@ -11,7 +11,7 @@ General strategy is:
             underweight the sell is.
     4) Return the trades in order.
 """
-
+import numpy as np
 
 def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
     """Create an array of backtested returns for the given allocation map.
@@ -23,7 +23,10 @@ def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
     Returns:
         return_array: Array of backtested returns.
     """
-    pass
+    allocation_array = np.array(
+            [allocation_map[ticker] for ticker in ticker_tuple],
+            dtype=np.float64)
+    return np.matmul(data_matrix, allocation_array)
 
 
 def _getPortfolioCorrelation(portfolio_1_returns, portfolio_2_returns):
@@ -46,5 +49,5 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
         actual_allocation_map: Map of tickers to allocation percentages.
         data_matrix: Rows = days, columns = tickers, values = % price changes.
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
-   """
-   pass
+    """
+    pass
