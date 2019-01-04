@@ -67,12 +67,6 @@ def _convertToMatrix(ticker_data):
 
     return_matrix = raw_price_array[1:] / raw_price_array[:-1]
 
-    cash_returns = np.ones((return_matrix.shape[0], 1))
-    return_matrix = np.append(return_matrix, cash_returns, 1)
-    ticker_tuple = list(ticker_tuple)
-    ticker_tuple.append('_CASH_')
-    ticker_tuple = tuple(ticker_tuple)
-
     return (ticker_tuple, return_matrix)
 
 

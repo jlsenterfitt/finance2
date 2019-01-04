@@ -126,6 +126,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
                     trading_increment * 100,
                     time.time() - start,
                     best_score))
+                print({ticker_tuple[i]: best[i] for i in range(len(ticker_tuple)) if best[i] > 0})
                 start = time.time()
                 trading_increment /= 2.0
    

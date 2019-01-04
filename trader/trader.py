@@ -44,6 +44,15 @@ def _getPortfolioCorrelation(portfolio_1_returns, portfolio_2_returns):
     return np.corrcoef(combined)
 
 
+def _addCashToDataMatrix(ticker_tuple, data_matrix):
+    cash_returns = np.ones((data_matrix.shape[0], 1))
+    data_matrix = np.append(data_matrix, cash_returns, 1)
+    ticker_tuple = list(ticker_tuple)
+    ticker_tuple.append('_CASH_')
+    ticker_tuple = tuple(ticker_tuple)
+    return (ticker_tuple, data_matrix)
+
+
 def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple, data_matrix):
     """Calculate correlation for all potential trades.
 
@@ -54,6 +63,8 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
     """
     trade_heap = []
+
+    (ticker_tuple, data_matrix) = _addCashToDataMatrix(ticker_tuple, data_matrix)
 
     default_desired_map = defaultdict(int)
     for k, v in desired_allocation_map.items():
