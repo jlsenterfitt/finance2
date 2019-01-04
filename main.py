@@ -8,6 +8,8 @@ from data_gatherer import data_gatherer
 import datetime
 import math
 from optimizer import optimizer
+import time
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -18,7 +20,7 @@ parser.add_argument(
 parser.add_argument(
     '--required_num_days',
     type=int, help='How many days are required.',
-    default=config.TRADING_DAYS_PER_YEAR)
+    default=config.TRADING_DAYS_PER_YEAR * 3)
 parser.add_argument(
     '--required_return',
     type=float,
@@ -39,16 +41,19 @@ def main():
     daily_return = math.pow(args.required_return, 1 / config.TRADING_DAYS_PER_YEAR)
 
     # Load full, unfiltered, and less than 1 month old data.
+    start = time.time()
     ticker_data = data_gatherer.getTickerData(
         set(config.TICKER_DICT.keys()),
         config.API_KEY,
         'cache',
         args.refresh_strategy)
+    print('Getting data took %.2fs' % (time.time() - start))
 
     # Run the optimizer for required date(s).
     allocation_map = {}
     epoch = datetime.datetime.utcfromtimestamp(0)
     optimized_list = []
+    start = time.time()
     if args.set_start_date:
         start_date_int = (datetime.datetime.strptime(args.set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
@@ -63,12 +68,14 @@ def main():
     elif args.set_date:
         date_int = (datetime.datetime.strptime(args.set_date, '%Y-%m-%d') - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
+        print('Cleaning data took %.2fs' % (time.time() - start))
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
         print(allocation_map)
         print('Score: %.4f' % best_score)
     else:
         date_int = (datetime.datetime.now() - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
+        print('Cleaning data took %.2fs' % (time.time() - start))
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
         print(allocation_map)
         print('Score: %.4f' % best_score)
