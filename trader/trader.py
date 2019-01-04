@@ -63,6 +63,10 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
     default_actual_map = defaultdict(int)
     for k, v in actual_allocation_map.items():
         if v > 0: default_actual_map[k] = v
+    current_returns = _getBacktestedAllocationReturns(default_actual_map, ticker_tuple, data_matrix)
+
+    current_correl = _getPortfolioCorrelation(optimal_returns, current_returns).min()
+    print('Current correl: %.4f' % current_correl)
 
     for sell_ticker in ticker_tuple:
         sell_delta = default_actual_map[sell_ticker] - default_desired_map[sell_ticker]
@@ -80,7 +84,9 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
 
             correl = _getPortfolioCorrelation(optimal_returns, trade_returns).min()
 
-            trade_heap.append((correl, sell_ticker, buy_ticker, true_delta))
+            if correl <= current_correl: continue
+    
+            trade_heap.append((correl, sell_ticker, buy_ticker, '%.1f%%' % (true_delta * 100)))
 
     for trade in sorted(trade_heap, reverse=True):
-        print('%.4f %s %s %.4f' % trade)
+        print('%.4f %s %s %s' % trade)
