@@ -16,6 +16,7 @@ import functools
 import multiprocessing as mp
 import numpy as np
 from scipy.stats.mstats import gmean
+import time
 
 
 def _initializeProcess(data):
@@ -93,6 +94,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
         best_score = _scoreAllocation(best, required_return)['score']
 
         trading_increment = 1.0
+        start = time.time()
 
         # TODO: Remove magic number.
         while trading_increment > 1 / 1024:
@@ -120,6 +122,11 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
                 best = best_result['allocation_array']
                 best_score = best_result['score']
             else:
+                print('Trading increment %.2f%% took %.2fs, score is %.4f' % (
+                    trading_increment * 100,
+                    time.time() - start,
+                    best_score))
+                start = time.time()
                 trading_increment /= 2.0
    
     allocation_map = {ticker_tuple[i]: best[i] for i in range(len(ticker_tuple))}
