@@ -10,6 +10,7 @@ import datetime
 import math
 from optimizer import optimizer
 import time
+from trader import trader
 
 
 parser = argparse.ArgumentParser()
@@ -79,6 +80,7 @@ def main():
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
         _printAllocMap(allocation_map)
         print('Score: %.4f' % best_score)
+        trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, ticker_tuple, data_matrix)
     else:
         date_int = (datetime.datetime.now() - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
@@ -86,9 +88,7 @@ def main():
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
         _printAllocMap(allocation_map)
         print('Score: %.4f' % best_score)
-
-    # Calculate trades for the most recent optimization.
-    trades = []
+        trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, ticker_tuple, data_matrix)
 
     # Run the backtester across all optimizations.
 

@@ -12,6 +12,7 @@ General strategy is:
     4) Return the trades in order.
 """
 from collections import defaultdict
+import heapq
 import numpy as np
 
 def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
@@ -24,12 +25,8 @@ def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
     Returns:
         return_array: Array of backtested returns.
     """
-    default_allocation_map = defaultdict(int)
-    for k, v in allocation_map.items():
-        default_allocation_map[k] = v
-
     allocation_array = np.array(
-            [default_allocation_map[ticker] for ticker in ticker_tuple],
+            [allocation_map[ticker] for ticker in ticker_tuple],
             dtype=np.float64)
     return np.matmul(data_matrix, allocation_array)
 
@@ -56,4 +53,34 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
         data_matrix: Rows = days, columns = tickers, values = % price changes.
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
     """
-    pass
+    trade_heap = []
+
+    default_desired_map = defaultdict(int)
+    for k, v in desired_allocation_map.items():
+        if v > 0: default_desired_map[k] = v
+    optimal_returns = _getBacktestedAllocationReturns(default_desired_map, ticker_tuple, data_matrix)
+
+    default_actual_map = defaultdict(int)
+    for k, v in actual_allocation_map.items():
+        if v > 0: default_actual_map[k] = v
+
+    for sell_ticker in ticker_tuple:
+        sell_delta = default_actual_map[sell_ticker] - default_desired_map[sell_ticker]
+        if sell_delta <= 0: continue
+
+        for buy_ticker in ticker_tuple:
+            buy_delta = default_desired_map[buy_ticker] - default_actual_map[buy_ticker]
+            if buy_delta <= 0: continue
+
+            true_delta = min(buy_delta, sell_delta)
+            trade = default_actual_map.copy()
+            trade[buy_ticker] += true_delta
+            trade[sell_ticker] -= true_delta
+            trade_returns = _getBacktestedAllocationReturns(trade, ticker_tuple, data_matrix)
+
+            correl = _getPortfolioCorrelation(optimal_returns, trade_returns).min()
+
+            trade_heap.append((correl, sell_ticker, buy_ticker, true_delta))
+
+    for trade in sorted(trade_heap, reverse=True):
+        print('%.4f %s %s %.4f' % trade)

@@ -26,22 +26,3 @@ class TestGetBacktestedReturns(unittest.TestCase):
 
         self.assertListEqual(list(actual), expected)
 
-    def test_missingTicker(self):
-        # Code shouldn't fail if a ticker doesn't have an allocation.
-        allocation_map = {
-                'fake1': 0.25,
-                'fake2': 0.75
-                }
-        ticker_tuple = ('fake1', 'fake2', 'fake3')
-        data_matrix = np.array(
-                [
-                    [0, 1, 4],
-                    [0, 2, 5],
-                    [1, 2, 6]
-                    ],
-                dtype=np.float64)
-        expected = [0.75, 1.5, 1.75]
-        actual = trader._getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix)
-
-        self.assertListEqual(list(actual), expected)
-
