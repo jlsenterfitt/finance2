@@ -43,7 +43,8 @@ def _getPortfolioCorrelation(portfolio_1_returns, portfolio_2_returns):
     Returns:
         correlation: The correlation between the portfolios.
     """
-    pass
+    combined = np.stack((portfolio_1_returns, portfolio_2_returns), axis=0)
+    return np.corrcoef(combined)
 
 
 def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple, data_matrix):
