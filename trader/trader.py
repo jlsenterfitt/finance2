@@ -11,6 +11,7 @@ General strategy is:
             underweight the sell is.
     4) Return the trades in order.
 """
+from collections import defaultdict
 import numpy as np
 
 def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
@@ -23,8 +24,12 @@ def _getBacktestedAllocationReturns(allocation_map, ticker_tuple, data_matrix):
     Returns:
         return_array: Array of backtested returns.
     """
+    default_allocation_map = defaultdict(int)
+    for k, v in allocation_map.items():
+        default_allocation_map[k] = v
+
     allocation_array = np.array(
-            [allocation_map[ticker] for ticker in ticker_tuple],
+            [default_allocation_map[ticker] for ticker in ticker_tuple],
             dtype=np.float64)
     return np.matmul(data_matrix, allocation_array)
 
