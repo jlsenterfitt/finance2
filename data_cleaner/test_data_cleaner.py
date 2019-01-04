@@ -91,9 +91,9 @@ class TestConvertToMatrix(unittest.TestCase):
                 }
         (ticker_tuple, return_matrix) = data_cleaner._convertToMatrix(test_data)
 
-        self.assertEqual(ticker_tuple, ('fake1', 'fake2'))
+        self.assertEqual(ticker_tuple, ('fake1', 'fake2', '_CASH_'))
         self.assertEqual(len(return_matrix), 1)
-        self.assertTupleEqual(tuple(return_matrix[0]), (2.0, 1.5))
+        self.assertTupleEqual(tuple(return_matrix[0]), (2.0, 1.5, 1.0))
 
 
 if __name__ == '__main__':
