@@ -1,6 +1,7 @@
 """Module to call other functions, and handle flags."""
 
 import argparse
+from collections import OrderedDict
 from copy import deepcopy
 import config
 from data_cleaner import data_cleaner
@@ -33,6 +34,12 @@ parser.add_argument(
     help='A single date to run the optimizer for.')
 
 
+def _printAllocMap(allocation_map):
+    filtered_map = {k: v for k, v in allocation_map.items() if v > 0}
+    ordered_map = OrderedDict(sorted(filtered_map.items()))
+    print(ordered_map)
+
+
 def main():
     args = parser.parse_args()
 
@@ -62,7 +69,7 @@ def main():
             (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
             optimized_list.append((start_date_int, allocation_map))
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
-            print(allocation_map)
+            _printAllocMap(allocation_map)
             # Add ~3 months of trading days.
             start_date_int += 365 / 4
     elif args.set_date:
@@ -70,14 +77,14 @@ def main():
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
         print('Cleaning data took %.2fs' % (time.time() - start))
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
-        print(allocation_map)
+        _printAllocMap(allocation_map)
         print('Score: %.4f' % best_score)
     else:
         date_int = (datetime.datetime.now() - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
         print('Cleaning data took %.2fs' % (time.time() - start))
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
-        print(allocation_map)
+        _printAllocMap(allocation_map)
         print('Score: %.4f' % best_score)
 
     # Calculate trades for the most recent optimization.
