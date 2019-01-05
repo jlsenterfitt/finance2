@@ -22,7 +22,7 @@ parser.add_argument(
 parser.add_argument(
     '--required_num_days',
     type=int, help='How many days are required.',
-    default=config.TRADING_DAYS_PER_YEAR * 3)
+    default=config.TRADING_DAYS_PER_YEAR * 14)
 parser.add_argument(
     '--required_return',
     type=float,

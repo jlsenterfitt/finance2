@@ -250,6 +250,14 @@ def _readCacheFiles(tickers, cache_folder):
     return ticker_data
 
 
+def _validateData(ticker_data):
+    for ticker, data in ticker_data.items():
+        for date, value in data['price_data'].items():
+            if value < 1:
+                print('Bad data: %s %d %d' % (ticker, date, value))
+                break
+
+
 def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     """Get data from APIs or caches for ticker data.
 
@@ -284,5 +292,7 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
 
     ticker_data = _getAndCacheApiData(uncached_files, api_key, cache_folder)
     ticker_data.update(_readCacheFiles(cached_files, cache_folder))
+
+    _validateData(ticker_data)
 
     return ticker_data
