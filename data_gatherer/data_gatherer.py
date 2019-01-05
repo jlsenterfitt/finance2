@@ -13,7 +13,6 @@ import datetime
 from copy import deepcopy
 import json
 import math
-from multiprocessing.dummy import Pool
 import os
 import requests
 import time
@@ -283,16 +282,7 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
 
     uncached_files = set(tickers) - set(cached_files)
 
-    pool1 = Pool(1)
-    pool2 = Pool(2)
-    api_result = pool1.apply_async(
-        _getAndCacheApiData, (uncached_files, api_key, cache_folder))
-    file_result = pool2.apply_async(
-        _readCacheFiles, (cached_files, cache_folder))
-    pool1.close()
-    pool2.close()
-
-    ticker_data = api_result.get()
-    ticker_data.update(file_result.get())
+    ticker_data = _getAndCacheApiData(uncached_files, api_key, cache_folder)
+    ticker_data.update(_readCacheFiles(cached_files, cache_folder))
 
     return ticker_data
