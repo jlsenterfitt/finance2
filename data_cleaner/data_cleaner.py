@@ -29,13 +29,27 @@ def _removeLowDataTickers(ticker_data, required_num_days):
 
 def _removeLowDataDays(ticker_data):
     """Remove any days of data with one or more tickers missing, in place."""
-    # Initialize dates as whatever an arbitrary ticker has.
-    date_set = set(list(ticker_data.values())[0]['price_data'].keys())
+    # Get a set of all known dates.
+    date_set = set()
+    for data in ticker_data.values():
+        date_set = date_set.union(data['price_data'].keys())
 
+    print('Init size: %d' % len(date_set))
     # Determine what dates are common to all tickers.
     for ticker, data in ticker_data.items():
         curr_date_set = set(data['price_data'].keys())
+        if len(date_set.intersection(curr_date_set)) < (len(date_set) / 2):
+            print(
+                    'Pathological ticker found: %s %d / %d' % (
+                        ticker,
+                        len(date_set.intersection(curr_date_set)),
+                        len(date_set)))
         date_set = date_set.intersection(curr_date_set)
+
+    print('Final size: %d' % len(date_set))
+
+    if not date_set:
+        raise ValueError('No common dates left.')
 
     for ticker, data in ticker_data.items():
         remove_keys = set(data['price_data'].keys()) - date_set
@@ -88,4 +102,6 @@ def cleanAndConvertData(ticker_data, required_num_days, end_date):
 
     _removeLowDataDays(ticker_data)
 
-    return _convertToMatrix(ticker_data)
+    (ticker_tuple, data_matrix) = _convertToMatrix(ticker_data)
+
+    return (ticker_tuple, data_matrix)
