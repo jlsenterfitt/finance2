@@ -79,11 +79,11 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
     current_correl = _getPortfolioCorrelation(optimal_returns, current_returns).min()
     print('Current correl: %.4f' % current_correl)
 
-    for sell_ticker in ticker_tuple:
+    for sell_ticker in actual_allocation_map.keys():
         sell_delta = default_actual_map[sell_ticker] - default_desired_map[sell_ticker]
         if sell_delta <= 0: continue
 
-        for buy_ticker in ticker_tuple:
+        for buy_ticker in desired_allocation_map.keys():
             buy_delta = default_desired_map[buy_ticker] - default_actual_map[buy_ticker]
             if buy_delta <= 0: continue
 
