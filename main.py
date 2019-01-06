@@ -41,11 +41,14 @@ def _printAllocMap(allocation_map):
     print(ordered_map)
 
 
-def _runSingleDay(date_int, ticker_data, daily_return, required_num_days):
+def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perform_trades=True):
     start = time.time()
     (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), required_num_days, date_int)
     print('Cleaning data took %.2fs' % (time.time() - start))
     (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
+
+    if not perform_trades: return allocation_map
+
     _printAllocMap(allocation_map)
     print('Score: %.4f' % best_score)
     small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map or ticker in config.CURRENT_ALLOCATION_DICT}
@@ -76,8 +79,7 @@ def main():
         start_date_int = (datetime.datetime.strptime(args.set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
         while start_date_int < today_int:
-            (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, start_date_int)
-            (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
+            allocation_map = _runSingleDay(start_date_int, ticker_data, daily_return, args.required_num_days, perform_trades=False)
             optimized_list.append((start_date_int, allocation_map))
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
             _printAllocMap(allocation_map)
