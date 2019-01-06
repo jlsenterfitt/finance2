@@ -41,7 +41,10 @@ def _getPortfolioCorrelation(portfolio_1_returns, portfolio_2_returns):
         correlation: The correlation between the portfolios.
     """
     combined = np.stack((portfolio_1_returns, portfolio_2_returns), axis=0)
-    return np.corrcoef(combined)
+    cov = np.cov(combined)
+    std = np.std(portfolio_1_returns)
+    correl = cov / pow(std, 2)
+    return correl
 
 
 def _addCashToDataMatrix(ticker_tuple, data_matrix):
