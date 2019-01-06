@@ -80,7 +80,9 @@ def main():
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
         _printAllocMap(allocation_map)
         print('Score: %.4f' % best_score)
-        trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, ticker_tuple, data_matrix)
+        small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map or ticker in config.CURRENT_ALLOCATION_DICT}
+        (small_ticker_tuple, small_data_matrix) = data_cleaner.cleanAndConvertData(small_ticker_data, 1, date_int)
+        trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, small_ticker_tuple, small_data_matrix)
     else:
         date_int = (datetime.datetime.now() - epoch).days
         (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), args.required_num_days, date_int)
@@ -88,7 +90,9 @@ def main():
         (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
         _printAllocMap(allocation_map)
         print('Score: %.4f' % best_score)
-        trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, ticker_tuple, data_matrix)
+        small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map or ticker in config.CURRENT_ALLOCATION_DICT}
+        (small_ticker_tuple, small_data_matrix) = data_cleaner.cleanAndConvertData(small_ticker_data, 1, date_int)
+        trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, small_ticker_tuple, small_data_matrix)
 
     # Run the backtester across all optimizations.
 
