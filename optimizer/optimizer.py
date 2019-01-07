@@ -125,13 +125,11 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return, use_downsi
             best = best_result['allocation_array']
             best_score = best_result['score']
         else:
-            """
             print('Trading increment %.2f%% took %.2fs, score is %.4f' % (
                 trading_increment * 100,
                 time.time() - start,
                 best_score))
             print({ticker_tuple[i]: best[i] for i in range(len(ticker_tuple)) if best[i] > 0})
-            """
             start = time.time()
             trading_increment /= 2.0
    

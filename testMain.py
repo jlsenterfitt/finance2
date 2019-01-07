@@ -3,9 +3,6 @@ import multiprocessing as mp
 import time
 
 
-output = []
-
-
 def _poolMain(kwargs):
     score = basicMain.actualMain(
             kwargs['desired_return'],
@@ -14,11 +11,11 @@ def _poolMain(kwargs):
             '2007-01-01',
             None,
             kwargs['use_downside_correl'])
-    output.append('%.4f %d %s %.4f' % (
+    return '%.4f %d %s %.4f' % (
         kwargs['desired_return'],
         kwargs['num_days'],
         kwargs['use_downside_correl'],
-        score))
+        score)
 
 
 def main():
@@ -36,10 +33,10 @@ def main():
                             'use_downside_correl': use_downside_correl
                             }
                         arg_list.append(kwargs)
-            pool.map(_poolMain, arg_list, 1)
+            output = pool.map(_poolMain, arg_list, 1)
     finally:
         print('Return Years Correl Score')
-        print('\n'.join(output))
+        print('\n'.join(sorted(output)))
         print('Took %.2fs' % (time.time() - start))
 
 
