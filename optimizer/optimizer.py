@@ -26,10 +26,10 @@ def _initializeProcess(data):
 
 
 def _unwrapAndScore(data_dict):
-    return _scoreAllocation(data_dict['allocation_array'], data_dict['required_return'])
+    return _scoreAllocation(data_dict['allocation_array'], data_dict['required_return'], data_dict['use_downside_correl'])
 
 
-def _scoreAllocation(allocation_array, required_return):
+def _scoreAllocation(allocation_array, required_return, use_downside_correl=True):
     """Determine the score of a given allocation.
 
     Args:
@@ -56,7 +56,9 @@ def _scoreAllocation(allocation_array, required_return):
     filtered_returns *= filtered_returns
     downside_risk = np.sqrt(filtered_returns.mean())
 
-    if len(allocation_array) > 1:
+    if not use_downside_correl:
+        downside_correl = 1
+    elif len(allocation_array) > 1:
         below_desired = daily_returns < required_return
         filtered_returns = [
             data_matrix[x]
@@ -74,7 +76,7 @@ def _scoreAllocation(allocation_array, required_return):
             'allocation_array': allocation_array}
 
 
-def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
+def findOptimalAllocation(data_matrix, ticker_tuple, required_return, use_downside_correl=True):
     """Find the optimal allocation.
 
     Args:
@@ -94,7 +96,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
 
         best = np.zeros(len(ticker_tuple), dtype=np.float64)
         best[0] = 1.0
-        best_score = _scoreAllocation(best, required_return)['score']
+        best_score = _scoreAllocation(best, required_return, use_downside_correl)['score']
 
         trading_increment = 1.0
         start = time.time()
@@ -112,7 +114,10 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return):
                     curr[sell_id] -= trading_increment
                     curr[buy_id] += trading_increment
 
-                    map_iterable.append({'allocation_array': curr, 'required_return': required_return})
+                    map_iterable.append({
+                        'allocation_array': curr, 
+                        'required_return': required_return, 
+                        'use_downside_correl': use_downside_correl})
 
             # TODO: Test different chunksizes.
             results = pool.map(_unwrapAndScore, map_iterable, 1)

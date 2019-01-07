@@ -44,12 +44,12 @@ def _printAllocMap(allocation_map):
     print(ordered_map)
 
 
-def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perform_trades=True):
+def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perform_trades=True, use_downside_correl=True):
     start = time.time()
     (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), required_num_days, date_int)
     print('Cleaning data took %.2fs' % (time.time() - start))
     start = time.time()
-    (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return)
+    (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return, use_downside_correl=use_downside_correl)
     print('Optimization took %.2fs' % (time.time() - start))
 
     if not perform_trades: return allocation_map
@@ -90,7 +90,13 @@ def _roughScore(return_list, required_return):
     return (mean_return - required_return) / downside_risk
 
 
-def actualMain(required_return, refresh_strategy, required_num_days, set_start_date, set_date):
+def actualMain(
+        required_return,
+        refresh_strategy,
+        required_num_days,
+        set_start_date,
+        set_date,
+        use_downside_correl=False):
     daily_return = math.pow(required_return, 1 / config.TRADING_DAYS_PER_YEAR)
 
     # Load full, unfiltered, and less than 1 month old data.
@@ -109,7 +115,7 @@ def actualMain(required_return, refresh_strategy, required_num_days, set_start_d
         start_date_int = (datetime.datetime.strptime(set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
         while start_date_int < today_int:
-            allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, required_num_days, perform_trades=False)
+            allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, required_num_days, perform_trades=False, use_downside_correl=use_downside_correl)
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
             _printAllocMap(allocation_map)
             new_perf = _runBacktest(allocation_map, deepcopy(ticker_data), start_date_int, start_date_int + 365 / 4)
@@ -121,10 +127,10 @@ def actualMain(required_return, refresh_strategy, required_num_days, set_start_d
         return rough_score
     elif set_date:
         date_int = (datetime.datetime.strptime(set_date, '%Y-%m-%d') - epoch).days
-        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, required_num_days)
+        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, required_num_days, use_downside_correl=use_downside_correl)
     else:
         date_int = (datetime.datetime.now() - epoch).days
-        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, required_num_days)
+        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, required_num_days, use_downside_correl=use_downside_correl)
 
 
 def main():
