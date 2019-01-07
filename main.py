@@ -72,7 +72,6 @@ def _runBacktest(allocation_map, ticker_data, start_date_int, next_date_int):
 
 
 def _roughScore(return_list, required_return):
-    print(return_list)
     return_list = np.array(return_list, dtype=np.float64)
     mean_return = gmean(return_list)
 
@@ -91,12 +90,8 @@ def _roughScore(return_list, required_return):
     return (mean_return - required_return) / downside_risk
 
 
-def main():
-    args = parser.parse_args()
-
-    if not args.required_return:
-        raise ValueError('Need to set required return')
-    daily_return = math.pow(args.required_return, 1 / config.TRADING_DAYS_PER_YEAR)
+def _actualMain(required_return, refresh_strategy, required_num_days, set_start_date, set_date):
+    daily_return = math.pow(required_return, 1 / config.TRADING_DAYS_PER_YEAR)
 
     # Load full, unfiltered, and less than 1 month old data.
     start = time.time()
@@ -104,33 +99,46 @@ def main():
         set(config.TICKER_DICT.keys()),
         config.API_KEY,
         'cache',
-        args.refresh_strategy)
+        refresh_strategy)
     print('Getting data took %.2fs' % (time.time() - start))
 
     # Run the optimizer for required date(s).
     epoch = datetime.datetime.utcfromtimestamp(0)
     optimized_list = []
-    if args.set_start_date:
-        start_date_int = (datetime.datetime.strptime(args.set_start_date, '%Y-%m-%d') - epoch).days
+    if set_start_date:
+        start_date_int = (datetime.datetime.strptime(set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
         while start_date_int < today_int:
-            allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, args.required_num_days, perform_trades=False)
+            allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, required_num_days, perform_trades=False)
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
             _printAllocMap(allocation_map)
             new_perf = _runBacktest(allocation_map, deepcopy(ticker_data), start_date_int, start_date_int + 365 / 4)
             optimized_list.append(new_perf)
             # Add ~3 months of trading days.
             start_date_int += 365 / 4
-        print('Score: %.4f' % _roughScore(optimized_list, daily_return))
-    elif args.set_date:
-        date_int = (datetime.datetime.strptime(args.set_date, '%Y-%m-%d') - epoch).days
-        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, args.required_num_days)
+        rough_score = _roughScore(optimized_list, daily_returns)
+        print('Score: %.4f' % rough_score)
+        return rough_score
+    elif set_date:
+        date_int = (datetime.datetime.strptime(set_date, '%Y-%m-%d') - epoch).days
+        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, required_num_days)
     else:
         date_int = (datetime.datetime.now() - epoch).days
-        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, args.required_num_days)
+        _runSingleDay(date_int, deepcopy(ticker_data), daily_return, required_num_days)
 
-    # Run the backtester across all optimizations.
 
+def main():
+    args = parser.parse_args()
+
+    if not args.required_return:
+        raise ValueError('Need to set required return')
+
+    _actualMain(
+            args.required_return,
+            args.refresh_strategy,
+            args.required_num_days,
+            args.set_start_date,
+            args.set_date)
 
 if __name__ == '__main__':
     main()
