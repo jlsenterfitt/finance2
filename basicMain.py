@@ -79,7 +79,7 @@ def _roughScore(return_list, required_return):
     # Otherwise, with a negative denominator, the code will push for a
     # large denominator to maximize the overall score.
     if mean_return < required_return:
-        return mean_return - required_return
+        return pow(mean_return, config.TRADING_DAYS_PER_YEAR) - pow(required_return, config.TRADING_DAYS_PER_YEAR)
 
     filtered_returns = np.copy(return_list)
     filtered_returns -= required_return
@@ -116,7 +116,7 @@ def actualMain(required_return, refresh_strategy, required_num_days, set_start_d
             optimized_list.append(new_perf)
             # Add ~3 months of trading days.
             start_date_int += 365 / 4
-        rough_score = _roughScore(optimized_list, daily_returns)
+        rough_score = _roughScore(optimized_list, daily_return)
         print('Score: %.4f' % rough_score)
         return rough_score
     elif set_date:
