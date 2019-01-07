@@ -56,15 +56,18 @@ def _scoreAllocation(allocation_array, required_return):
     filtered_returns *= filtered_returns
     downside_risk = np.sqrt(filtered_returns.mean())
 
-    below_desired = daily_returns < required_return
-    filtered_returns = [
-        data_matrix[x]
-        for x in range(len(below_desired)) if below_desired[x]]
-    downside_correl = np.matmul(
-        np.matmul(
-            allocation_array,
-            np.corrcoef(filtered_returns, rowvar=False)),
-        allocation_array)
+    if len(allocation_array) > 1:
+        below_desired = daily_returns < required_return
+        filtered_returns = [
+            data_matrix[x]
+            for x in range(len(below_desired)) if below_desired[x]]
+        downside_correl = np.matmul(
+            np.matmul(
+                allocation_array,
+               np.corrcoef(filtered_returns, rowvar=False)),
+            allocation_array)
+    else:
+        downside_correl = 1
 
     return {
             'score': (mean_return - required_return) / (downside_risk * downside_correl),
