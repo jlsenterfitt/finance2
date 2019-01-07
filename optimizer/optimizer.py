@@ -13,7 +13,6 @@ General strategy is:
     6) Once a lower limit of trade amount is found, return the allocaiton.
 """
 import functools
-import multiprocessing as mp
 import numpy as np
 from scipy.stats.mstats import gmean
 import time
@@ -90,55 +89,51 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return, use_downsi
     # Initialize global data for master.
     _initializeProcess(data_matrix)
 
-    with mp.Pool(
-            initializer=_initializeProcess,
-            initargs=(data_matrix,)) as pool:
+    best = np.zeros(len(ticker_tuple), dtype=np.float64)
+    best[0] = 1.0
+    best_score = _scoreAllocation(best, required_return, use_downside_correl)['score']
 
-        best = np.zeros(len(ticker_tuple), dtype=np.float64)
-        best[0] = 1.0
-        best_score = _scoreAllocation(best, required_return, use_downside_correl)['score']
+    trading_increment = 1.0
+    start = time.time()
 
-        trading_increment = 1.0
-        start = time.time()
+    # TODO: Remove magic number. Currently ~1 basis point.
+    while trading_increment > 1 / 1024:
+        map_iterable = []
+        for sell_id in range(len(ticker_tuple)):
+            if best[sell_id] < trading_increment: continue
 
-        # TODO: Remove magic number. Currently ~1 basis point.
-        while trading_increment > 1 / 1024:
-            map_iterable = []
-            for sell_id in range(len(ticker_tuple)):
-                if best[sell_id] < trading_increment: continue
+            for buy_id in range(len(ticker_tuple)):
+                if buy_id == sell_id: continue
 
-                for buy_id in range(len(ticker_tuple)):
-                    if buy_id == sell_id: continue
+                curr = np.copy(best)
+                curr[sell_id] -= trading_increment
+                curr[buy_id] += trading_increment
 
-                    curr = np.copy(best)
-                    curr[sell_id] -= trading_increment
-                    curr[buy_id] += trading_increment
+                map_iterable.append({
+                    'allocation_array': curr, 
+                    'required_return': required_return, 
+                    'use_downside_correl': use_downside_correl})
 
-                    map_iterable.append({
-                        'allocation_array': curr, 
-                        'required_return': required_return, 
-                        'use_downside_correl': use_downside_correl})
-
-            # TODO: Test different chunksizes.
-            results = pool.map(_unwrapAndScore, map_iterable, 1)
-            best_result = functools.reduce(
-                    lambda x, y: x if x['score'] > y['score'] else y,
-                    results,
-                    {'score': -float('inf')})
+        # TODO: Test different chunksizes.
+        results = map(_unwrapAndScore, map_iterable)
+        best_result = functools.reduce(
+            lambda x, y: x if x['score'] > y['score'] else y,
+            results,
+            {'score': -float('inf')})
         
-            if best_result['score'] > best_score:
-                best = best_result['allocation_array']
-                best_score = best_result['score']
-            else:
-                """
-                print('Trading increment %.2f%% took %.2fs, score is %.4f' % (
-                    trading_increment * 100,
-                    time.time() - start,
-                    best_score))
-                print({ticker_tuple[i]: best[i] for i in range(len(ticker_tuple)) if best[i] > 0})
-                """
-                start = time.time()
-                trading_increment /= 2.0
+        if best_result['score'] > best_score:
+            best = best_result['allocation_array']
+            best_score = best_result['score']
+        else:
+            """
+            print('Trading increment %.2f%% took %.2fs, score is %.4f' % (
+                trading_increment * 100,
+                time.time() - start,
+                best_score))
+            print({ticker_tuple[i]: best[i] for i in range(len(ticker_tuple)) if best[i] > 0})
+            """
+            start = time.time()
+            trading_increment /= 2.0
    
     allocation_map = {ticker_tuple[i]: best[i] for i in range(len(ticker_tuple))}
 
