@@ -90,7 +90,7 @@ def _roughScore(return_list, required_return):
     return (mean_return - required_return) / downside_risk
 
 
-def _actualMain(required_return, refresh_strategy, required_num_days, set_start_date, set_date):
+def actualMain(required_return, refresh_strategy, required_num_days, set_start_date, set_date):
     daily_return = math.pow(required_return, 1 / config.TRADING_DAYS_PER_YEAR)
 
     # Load full, unfiltered, and less than 1 month old data.
@@ -133,7 +133,7 @@ def main():
     if not args.required_return:
         raise ValueError('Need to set required return')
 
-    _actualMain(
+    actualMain(
             args.required_return,
             args.refresh_strategy,
             args.required_num_days,
