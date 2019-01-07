@@ -15,6 +15,16 @@ def _removeFutureData(ticker_data, end_date):
                 del ticker_data[ticker]['price_data'][date_int]
 
 
+def _removePastData(ticker_data, start_date):
+    if not start_date:
+        return
+
+    for ticker in ticker_data:
+        for date_int in set(ticker_data[ticker]['price_data'].keys()):
+            if date_int < start_date:
+                del ticker_data[ticker]['price_data'][date_int]
+
+
 def _removeLowDataTickers(ticker_data, required_num_days):
     """Remove tickers without enough days of data in place.
 
@@ -34,7 +44,6 @@ def _removeLowDataDays(ticker_data):
     for data in ticker_data.values():
         date_set = date_set.union(data['price_data'].keys())
 
-    print('Init size: %d' % len(date_set))
     # Determine what dates are common to all tickers.
     for ticker, data in ticker_data.items():
         curr_date_set = set(data['price_data'].keys())
@@ -45,8 +54,6 @@ def _removeLowDataDays(ticker_data):
                         len(date_set.intersection(curr_date_set)),
                         len(date_set)))
         date_set = date_set.intersection(curr_date_set)
-
-    print('Final size: %d' % len(date_set))
 
     if not date_set:
         raise ValueError('No common dates left.')
@@ -84,19 +91,23 @@ def _convertToMatrix(ticker_data):
     return (ticker_tuple, return_matrix)
 
 
-def cleanAndConvertData(ticker_data, required_num_days, end_date):
+def cleanAndConvertData(ticker_data, required_num_days, end_date, first_date=None):
     """Convert ticker data to a matrix for numpy processing.
 
     Args:
         ticker_data: Data from the data_gatherer module.
         required_num_days: How many days of data each ticker should have.
         end_date: Data on or after this date should be discarded.
+        first_date: Data before this date should be discarded.
+
     Returns:
         data_matrix: Rows = days, columns = tickers, values = % price changes.
             Tickers are ordered alphabetically.
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
     """
     _removeFutureData(ticker_data, end_date)
+
+    _removePastData(ticker_data, first_date)
 
     _removeLowDataTickers(ticker_data, required_num_days)
 
