@@ -119,10 +119,16 @@ def actualMain(
             allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, required_num_days, perform_trades=False, use_downside_correl=use_downside_correl)
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
             _printAllocMap(allocation_map)
-            new_perf = _runBacktest(allocation_map, deepcopy(ticker_data), start_date_int, start_date_int + 365 / 4)
-            optimized_list.append(new_perf)
+            new_perf = _runBacktest(allocation_map, deepcopy(ticker_data), start_date_int, start_date_int + 365)
+            if not np.isnan(new_perf):
+                optimized_list.append(new_perf)
+            else:
+                print('Found nan')
+                print(start_date_int)
+                print(required_return)
+                print(required_num_days)
             # Add ~3 months of trading days.
-            start_date_int += 365 / 4
+            start_date_int += 365
         rough_score = _roughScore(optimized_list, daily_return)
         print('Score: %.4f' % rough_score)
         return rough_score
