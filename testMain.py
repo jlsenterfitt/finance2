@@ -3,6 +3,9 @@ import multiprocessing as mp
 import time
 
 
+index = mp.Value('d', 0)
+
+
 def _poolMain(kwargs):
     score = basicMain.actualMain(
             kwargs['desired_return'],
@@ -11,6 +14,9 @@ def _poolMain(kwargs):
             '2007-01-01',
             None,
             kwargs['use_downside_correl'])
+    with index.get_lock():
+        index.value += 1
+        print('\n\nFinished %d\n\n' % index.value)
     return '%.4f %d %s %.4f' % (
         kwargs['desired_return'],
         kwargs['num_days'],
@@ -24,13 +30,13 @@ def main():
     try:
         with mp.Pool() as pool:
             arg_list = []
-            for desired_return in [1.0561, 1.0661, 1.0761, 1.0861, 1.0961]:
-                for num_years in range(8, 0, -1):
+            for desired_return in [1.0561, 1.0761, 1.0961]:
+                for num_years in [8, 4, 2, 1]:
                     for use_downside_correl in [False]:
                         kwargs = {
                             'desired_return': desired_return,
                             'num_days': 253 * num_years,
-                            'use_downside_correl': use_downside_correl
+                            'use_downside_correl': use_downside_correl,
                             }
                         arg_list.append(kwargs)
             output = pool.map(_poolMain, arg_list, 1)

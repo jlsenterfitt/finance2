@@ -72,6 +72,7 @@ def _runBacktest(allocation_map, ticker_data, start_date_int, next_date_int):
 
 
 def _roughScore(return_list, required_return):
+    print(return_list)
     return_list = np.array(return_list, dtype=np.float64)
     mean_return = gmean(return_list)
 
