@@ -40,7 +40,7 @@ parser.add_argument(
 
 def _printAllocMap(allocation_map):
     filtered_map = {k: v for k, v in allocation_map.items() if v > 0}
-    ordered_map = OrderedDict(sorted(filtered_map.items()))
+    ordered_map = OrderedDict(sorted(filtered_map.items(), key=lambda kv: kv[1], reverse=True))
     print(ordered_map)
 
 
