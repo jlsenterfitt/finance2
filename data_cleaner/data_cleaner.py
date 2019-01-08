@@ -1,6 +1,43 @@
 """Convert ticker_data to a data_matrix for processing."""
 import functools
 import numpy as np
+from scipy.stats.mstats import gmean
+
+
+def _getRatios(ticker_data):
+    all_scores = []
+    removed_tickers = []
+    for ticker in set(ticker_data.keys()):
+        price_list = []
+        for date_int in sorted(ticker_data[ticker]['price_data'].keys()):
+            price_list.append(ticker_data[ticker]['price_data'][date_int])
+        price_array = np.array(price_list, dtype=np.float64)
+        return_array = price_array[1:] / price_array[:-1]
+        mean_return = pow(gmean(return_array), 253)
+        std = return_array.std() * pow(253, 0.5)
+
+        downside_returns = np.copy(return_array)
+        downside_returns -= pow(1.0761, 1/253)
+        downside_returns = np.clip(downside_returns, None, 0)
+        downside_returns *= downside_returns
+        downside_risk = np.sqrt(downside_returns.mean()) * pow(253, 0.5)
+
+        sharpe_ratio = (mean_return - 1.0) / std
+        sortino_ratio = (mean_return - 1.0761) / downside_risk
+
+        all_scores.append((ticker, max(sharpe_ratio, sortino_ratio), sharpe_ratio, sortino_ratio, mean_return, std, downside_risk))
+
+        if max(sharpe_ratio, sortino_ratio) < 0:
+            del ticker_data[ticker]
+            removed_tickers.append(ticker)
+
+    all_scores.sort()
+
+    #for scores in all_scores:
+        #print(scores)
+
+    print('Removed %d tickers' % len(removed_tickers))
+    print(removed_tickers)
 
 def _removeFutureData(ticker_data, end_date):
     """Remove data on or after a given date in place.
@@ -87,6 +124,7 @@ def _convertToMatrix(ticker_data):
     raw_price_array = np.array(raw_price_list, dtype=np.float64).transpose()
 
     return_matrix = raw_price_array[1:] / raw_price_array[:-1]
+    print(len(return_matrix))
 
     return (ticker_tuple, return_matrix)
 
@@ -108,6 +146,8 @@ def cleanAndConvertData(ticker_data, required_num_days, end_date, first_date=Non
     _removeFutureData(ticker_data, end_date)
 
     _removePastData(ticker_data, first_date)
+
+    # _getRatios(ticker_data)
 
     _removeLowDataTickers(ticker_data, required_num_days)
 

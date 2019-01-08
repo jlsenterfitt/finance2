@@ -38,10 +38,11 @@ parser.add_argument(
     help='A single date to run the optimizer for.')
 
 
-def _printAllocMap(allocation_map):
+def _printAllocMap(allocation_map, ticker_data):
     filtered_map = {k: v for k, v in allocation_map.items() if v > 0}
     ordered_map = OrderedDict(sorted(filtered_map.items(), key=lambda kv: kv[1], reverse=True))
-    print(ordered_map)
+    for k, v in ordered_map.items():
+        print('{:5.2f}% {}\t{}'.format(v * 100, k, ticker_data[k]['name']))
 
 
 def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perform_trades=True, use_downside_correl=True):
@@ -54,7 +55,7 @@ def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perfor
 
     if not perform_trades: return allocation_map
 
-    _printAllocMap(allocation_map)
+    _printAllocMap(allocation_map, ticker_data)
     print('Score: %.4f' % best_score)
     small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map or ticker in config.CURRENT_ALLOCATION_DICT}
     (small_ticker_tuple, small_data_matrix) = data_cleaner.cleanAndConvertData(small_ticker_data, 1, date_int)
