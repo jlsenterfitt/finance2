@@ -221,7 +221,7 @@ def _getCachedFiles(tickers, cache_folder, max_age):
         if max_age == None or days_since_modified < max_age:
             unsorted_list.append((days_since_modified, ticker))
 
-    sorted_list = sorted(unsorted_list)
+    sorted_list = sorted(unsorted_list, reverse=True)
 
     cached_ticker_list = []
     for _, ticker in sorted_list:
@@ -273,7 +273,8 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     ticker_data = None
     cached_files = []
     if refresh_strategy == 'all':
-        return _getAndCacheApiData(tickers, api_key, cache_folder)
+        cached_files = _getCachedFiles(tickers, cache_folder, None)
+        return _getAndCacheApiData(cached_files, api_key, cache_folder)
     elif refresh_strategy == 'none':
         cached_files = _getCachedFiles(tickers, cache_folder, None)
     else:
