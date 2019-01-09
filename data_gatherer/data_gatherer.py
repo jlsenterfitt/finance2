@@ -274,7 +274,10 @@ def getTickerData(tickers, api_key, cache_folder, refresh_strategy):
     cached_files = []
     if refresh_strategy == 'all':
         cached_files = _getCachedFiles(tickers, cache_folder, None)
-        return _getAndCacheApiData(cached_files, api_key, cache_folder)
+        uncached_files = set(tickers) - set(cached_files)
+        ticker_data = _getAndCacheApiData(uncached_files, api_key, cache_folder)
+        ticker_data.update(_getAndCacheApiData(cached_files, api_key, cache_folder))
+        return ticker_data
     elif refresh_strategy == 'none':
         cached_files = _getCachedFiles(tickers, cache_folder, None)
     else:
