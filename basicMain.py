@@ -47,10 +47,10 @@ def _printAllocMap(allocation_map, ticker_data):
 
 def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perform_trades=True, use_downside_correl=True):
     start = time.time()
-    (ticker_tuple, data_matrix) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), required_num_days, date_int)
+    (ticker_tuple, data_matrix, expense_array) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), required_num_days, date_int)
     print('Cleaning data took %.2fs' % (time.time() - start))
     start = time.time()
-    (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return, use_downside_correl=use_downside_correl)
+    (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return, expense_array, use_downside_correl=use_downside_correl)
     print('Optimization took %.2fs' % (time.time() - start))
 
     if not perform_trades: return allocation_map
@@ -58,18 +58,19 @@ def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perfor
     _printAllocMap(allocation_map, ticker_data)
     print('Score: %.4f' % best_score)
     small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map or ticker in config.CURRENT_ALLOCATION_DICT}
-    (small_ticker_tuple, small_data_matrix) = data_cleaner.cleanAndConvertData(small_ticker_data, 1, date_int)
+    (small_ticker_tuple, small_data_matrix, _) = data_cleaner.cleanAndConvertData(small_ticker_data, 1, date_int)
     trader.calculateTrades(allocation_map, config.CURRENT_ALLOCATION_DICT, small_ticker_tuple, small_data_matrix)
 
 
 def _runBacktest(allocation_map, ticker_data, start_date_int, next_date_int):
     small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map}
-    (small_ticker_tuple, small_data_matrix) = data_cleaner.cleanAndConvertData(
+    (small_ticker_tuple, small_data_matrix, small_expense_array) = data_cleaner.cleanAndConvertData(
             small_ticker_data, 1, next_date_int, first_date=start_date_int)
     allocation_map = defaultdict(int, allocation_map)
     small_allocation_array = np.array([allocation_map[ticker] for ticker in small_ticker_tuple], dtype=np.float64)
     performance = gmean(np.matmul(small_data_matrix, small_allocation_array))
-    return performance
+    expense = pow(1 - np.matmul(small_allocation_array, small_expense_array), 1 / config.TRADING_DAYS_PER_YEAR)
+    return performance * expense
 
 
 def _roughScore(return_list, required_return):
@@ -108,6 +109,8 @@ def actualMain(
         config.API_KEY,
         'cache',
         refresh_strategy)
+    for ticker in ticker_data:
+        ticker_data[ticker]['expense_ratio'] = config.TICKER_DICT[ticker]
     print('Getting data took %.2fs' % (time.time() - start))
 
     # Run the optimizer for required date(s).

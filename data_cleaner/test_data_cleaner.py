@@ -77,23 +77,26 @@ class TestConvertToMatrix(unittest.TestCase):
     def test_basic(self):
         test_data = {
                 'fake1': {
+                    'expense_ratio': 0.0001,
                     'price_data': {
                         0: 1,
                         1: 2
                         }
                     },
                 'fake2': {
+                    'expense_ratio': 0.01,
                     'price_data': {
                         0: 4,
                         1: 6
                         }
                     }
                 }
-        (ticker_tuple, return_matrix) = data_cleaner._convertToMatrix(test_data)
+        (ticker_tuple, return_matrix, expense_array) = data_cleaner._convertToMatrix(test_data)
 
         self.assertEqual(ticker_tuple, ('fake1', 'fake2'))
         self.assertEqual(len(return_matrix), 1)
         self.assertTupleEqual(tuple(return_matrix[0]), (2.0, 1.5))
+        self.assertTupleEqual(tuple(expense_array), (0.0001, 0.01))
 
 
 if __name__ == '__main__':

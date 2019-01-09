@@ -25,10 +25,14 @@ def _initializeProcess(data):
 
 
 def _unwrapAndScore(data_dict):
-    return _scoreAllocation(data_dict['allocation_array'], data_dict['required_return'], data_dict['use_downside_correl'])
+    return _scoreAllocation(
+            data_dict['allocation_array'],
+            data_dict['required_return'],
+            data_dict['expense_array'],
+            use_downside_correl = data_dict['use_downside_correl'])
 
 
-def _scoreAllocation(allocation_array, required_return, use_downside_correl=True):
+def _scoreAllocation(allocation_array, required_return, expense_array, use_downside_correl=False):
     """Determine the score of a given allocation.
 
     Args:
@@ -39,6 +43,8 @@ def _scoreAllocation(allocation_array, required_return, use_downside_correl=True
         score: A modified Sortino Ratio for the allocation.
     """
     daily_returns = np.matmul(data_matrix, allocation_array)
+    expenses = pow(1 - np.matmul(allocation_array, expense_array), 1 / 253)
+    daily_returns *= expenses
     mean_return = gmean(daily_returns)
 
     # Short-circuit score calculation when mean_return < required_return.
@@ -75,7 +81,7 @@ def _scoreAllocation(allocation_array, required_return, use_downside_correl=True
             'allocation_array': allocation_array}
 
 
-def findOptimalAllocation(data_matrix, ticker_tuple, required_return, use_downside_correl=True):
+def findOptimalAllocation(data_matrix, ticker_tuple, required_return, expense_array, use_downside_correl=True):
     """Find the optimal allocation.
 
     Args:
@@ -91,7 +97,7 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return, use_downsi
 
     best = np.zeros(len(ticker_tuple), dtype=np.float64)
     best[0] = 1.0
-    best_score = _scoreAllocation(best, required_return, use_downside_correl)['score']
+    best_score = _scoreAllocation(best, required_return, expense_array, use_downside_correl)['score']
 
     trading_increment = 1.0
     start = time.time()
@@ -112,7 +118,8 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return, use_downsi
                 map_iterable.append({
                     'allocation_array': curr, 
                     'required_return': required_return, 
-                    'use_downside_correl': use_downside_correl})
+                    'use_downside_correl': use_downside_correl,
+                    'expense_array': expense_array})
 
         # TODO: Test different chunksizes.
         results = map(_unwrapAndScore, map_iterable)

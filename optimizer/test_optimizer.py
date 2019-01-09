@@ -20,11 +20,12 @@ class TestScoreAllocation(unittest.TestCase):
                 [0.9976, 0.9986],
                 [1.0061, 1.0157]],
             dtype=np.float64)
+        expense_array = np.array((0.1, 0.2), dtype=np.float64)
         allocations = np.array((0.05, 0.95), dtype=np.float64)
         required_return = 0.9950
-        expected_score = 0.5430
+        expected_score = 0.2914
         optimizer._initializeProcess(data_matrix)
-        output = optimizer._scoreAllocation(allocations, required_return)
+        output = optimizer._scoreAllocation(allocations, required_return, expense_array)
         self.assertAlmostEqual(output['score'], expected_score, places=4)
 
     def test_negative(self):
@@ -40,11 +41,12 @@ class TestScoreAllocation(unittest.TestCase):
                 [0.9976, 0.9986],
                 [1.0061, 1.0157]],
             dtype=np.float64)
+        expense_array = np.array((0.1, 0.2), dtype=np.float64)
         allocations = np.array((0.05, 0.95), dtype=np.float64)
         required_return = 1.0
-        expected_score = -0.0024
+        expected_score = -0.0032
         optimizer._initializeProcess(data_matrix)
-        output = optimizer._scoreAllocation(allocations, required_return)
+        output = optimizer._scoreAllocation(allocations, required_return, expense_array)
         self.assertAlmostEqual(output['score'], expected_score, places=4)
 
 

@@ -111,22 +111,24 @@ def _convertToMatrix(ticker_data):
             Tickers are ordered alphabetically.
         ticker_tuple: Tuple of tickers in the matrix, in the same order.
     """
-    # TODO: This should incorporate expense ratios.
     ticker_tuple = tuple(sorted(ticker_data.keys()))
 
     # Generate a 2-d array of raw prices.
     raw_price_list = []
+    expense_ratio_list = []
     for ticker in ticker_tuple:
         new_row = []
         for date in sorted(ticker_data[ticker]['price_data'].keys()):
             new_row.append(ticker_data[ticker]['price_data'][date])
         raw_price_list.append(new_row)
+        expense_ratio_list.append(ticker_data[ticker]['expense_ratio'])
     raw_price_array = np.array(raw_price_list, dtype=np.float64).transpose()
 
     return_matrix = raw_price_array[1:] / raw_price_array[:-1]
-    print(len(return_matrix))
+    expense_array = np.array(expense_ratio_list, dtype=np.float64)
+    print('Days of data %d' % len(return_matrix))
 
-    return (ticker_tuple, return_matrix)
+    return (ticker_tuple, return_matrix, expense_array)
 
 
 def cleanAndConvertData(ticker_data, required_num_days, end_date, first_date=None):
@@ -153,6 +155,6 @@ def cleanAndConvertData(ticker_data, required_num_days, end_date, first_date=Non
 
     _removeLowDataDays(ticker_data)
 
-    (ticker_tuple, data_matrix) = _convertToMatrix(ticker_data)
+    (ticker_tuple, data_matrix, expense_array) = _convertToMatrix(ticker_data)
 
-    return (ticker_tuple, data_matrix)
+    return (ticker_tuple, data_matrix, expense_array)
