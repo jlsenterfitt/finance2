@@ -102,8 +102,8 @@ def findOptimalAllocation(data_matrix, ticker_tuple, required_return, expense_ar
     trading_increment = 1.0
     start = time.time()
 
-    # TODO: Remove magic number. Currently ~1 basis point.
-    while trading_increment > 1 / 1024:
+    # TODO: Remove magic number. Currently ~1%.
+    while trading_increment > 1 / 128:
         map_iterable = []
         for sell_id in range(len(ticker_tuple)):
             if best[sell_id] < trading_increment: continue
