@@ -122,7 +122,7 @@ def actualMain(
         while start_date_int < today_int:
             allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, required_num_days, perform_trades=False, use_downside_correl=use_downside_correl)
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
-            _printAllocMap(allocation_map)
+            _printAllocMap(allocation_map, ticker_data)
             new_perf = _runBacktest(allocation_map, deepcopy(ticker_data), start_date_int, start_date_int + 365)
             if not np.isnan(new_perf):
                 optimized_list.append(new_perf)
