@@ -42,7 +42,7 @@ def _getPortfolioCorrelation(portfolio_1_returns, portfolio_2_returns):
     """
     combined = np.stack((portfolio_1_returns, portfolio_2_returns), axis=0)
     cov = np.cov(combined)
-    std = np.std(portfolio_1_returns)
+    std = max(np.std(portfolio_1_returns), np.std(portfolio_2_returns))
     correl = cov / pow(std, 2)
     return correl
 
@@ -90,7 +90,8 @@ def calculateTrades(desired_allocation_map, actual_allocation_map, ticker_tuple,
             buy_delta = default_desired_map[buy_ticker] - default_actual_map[buy_ticker]
             if buy_delta <= 0: continue
 
-            true_delta = min(buy_delta, sell_delta)
+            # Limit to 1% per trade.
+            true_delta = min(buy_delta, sell_delta, 0.01)
             trade = default_actual_map.copy()
             trade[buy_ticker] += true_delta
             trade[sell_ticker] -= true_delta
