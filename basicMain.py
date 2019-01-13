@@ -47,7 +47,11 @@ def _printAllocMap(allocation_map, ticker_data):
 
 def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perform_trades=True, use_downside_correl=True):
     start = time.time()
-    (ticker_tuple, data_matrix, expense_array) = data_cleaner.cleanAndConvertData(deepcopy(ticker_data), required_num_days, date_int)
+    filtered_ticker_data = deepcopy(ticker_data)
+    for ticker in set(filtered_ticker_data.keys()):
+        if ticker not in config.ALLOWED_TICKERS:
+            del filtered_ticker_data[ticker]
+    (ticker_tuple, data_matrix, expense_array) = data_cleaner.cleanAndConvertData(filtered_ticker_data, required_num_days, date_int)
     print('Cleaning data took %.2fs' % (time.time() - start))
     start = time.time()
     (best_score, allocation_map) = optimizer.findOptimalAllocation(data_matrix, ticker_tuple, daily_return, expense_array, use_downside_correl=use_downside_correl)
@@ -120,7 +124,13 @@ def actualMain(
         start_date_int = (datetime.datetime.strptime(set_start_date, '%Y-%m-%d') - epoch).days
         today_int = (datetime.datetime.now() - epoch).days
         while start_date_int < today_int:
-            allocation_map = _runSingleDay(start_date_int, deepcopy(ticker_data), daily_return, required_num_days, perform_trades=False, use_downside_correl=use_downside_correl)
+            allocation_map = _runSingleDay(
+                    start_date_int,
+                    deepcopy(ticker_data),
+                    daily_return,
+                    required_num_days,
+                    perform_trades=False,
+                    use_downside_correl=use_downside_correl)
             print(datetime.date.fromtimestamp(start_date_int * 24 * 3600))
             _printAllocMap(allocation_map, ticker_data)
             new_perf = _runBacktest(allocation_map, deepcopy(ticker_data), start_date_int, start_date_int + 365)
