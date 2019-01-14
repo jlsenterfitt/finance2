@@ -15,6 +15,7 @@ import json
 import math
 import os
 import requests
+import sys
 import time
 
 
@@ -169,6 +170,7 @@ def _getAndCacheApiData(tickers, api_key, cache_folder):
         with bz2.BZ2File(filename, 'wb') as f:
             f.write(data_json.encode())
         ticker_data.update(data)
+        sys.stdout.flush()
 
     return ticker_data
 
