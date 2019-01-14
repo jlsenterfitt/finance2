@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument(
     '--refresh_strategy',
     choices=['outdated', 'none', 'all'],
-    default='outdated',
+    default='none',
     help='What tickers to update.')
 parser.add_argument(
     '--required_num_days',
