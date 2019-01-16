@@ -69,7 +69,7 @@ def _runSingleDay(date_int, ticker_data, daily_return, required_num_days, perfor
 def _runBacktest(allocation_map, ticker_data, start_date_int, next_date_int):
     small_ticker_data = {ticker: data for ticker, data in ticker_data.items() if ticker in allocation_map}
     (small_ticker_tuple, small_data_matrix, small_expense_array) = data_cleaner.cleanAndConvertData(
-            small_ticker_data, 1, next_date_int, first_date=start_date_int)
+            small_ticker_data, 30, next_date_int, first_date=start_date_int)
     allocation_map = defaultdict(int, allocation_map)
     small_allocation_array = np.array([allocation_map[ticker] for ticker in small_ticker_tuple], dtype=np.float64)
     performance = gmean(np.matmul(small_data_matrix, small_allocation_array))

@@ -1,5 +1,7 @@
 import basicMain
+import datetime
 import multiprocessing as mp
+from random import shuffle
 import time
 
 
@@ -15,16 +17,21 @@ def _poolMain(kwargs):
             kwargs['date'],
             None,
             kwargs['use_downside_correl'])
-    except:
+    except Exception as e:
         score = -100
+        print(e)
+        raise e
     with index.get_lock():
         index.value += 1
-        print('\n\nFinished %d\n\n' % index.value)
-    return '%.4f %d %s %.4f' % (
+        print('\n\nFinished %d' % index.value)
+    return_str = '%.4f %d %s %.4f' % (
         kwargs['desired_return'],
         kwargs['num_days'],
         kwargs['use_downside_correl'],
         score)
+    print(return_str)
+    print('\n')
+    return return_str
 
 
 def main():
@@ -32,77 +39,23 @@ def main():
     start = time.time()
     try:
         with mp.Pool() as pool:
+            num_years = 1
+            quarter = 0
             arg_list = []
-            """
-            for desired_return in [1.0761]:
-                for num_years in range(20, 0, -1):
-                    for use_downside_correl in [False]:
-                        kwargs = {
-                            'desired_return': desired_return,
-                            'num_days': 253 * num_years,
-                            'use_downside_correl': use_downside_correl,
-                            }
-                        arg_list.append(kwargs)
-            """
-            arg_list = [
-                {'desired_return': 1.0561, 'num_days': 253 * 1, 'use_downside_correl': False, 'date': '2000-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 2, 'use_downside_correl': False, 'date': '2001-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 3, 'use_downside_correl': False, 'date': '2002-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 4, 'use_downside_correl': False, 'date': '2003-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 5, 'use_downside_correl': False, 'date': '2004-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 6, 'use_downside_correl': False, 'date': '2005-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 7, 'use_downside_correl': False, 'date': '2006-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 8, 'use_downside_correl': False, 'date': '2007-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 9, 'use_downside_correl': False, 'date': '2008-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 10, 'use_downside_correl': False, 'date': '2009-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 11, 'use_downside_correl': False, 'date': '2010-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 12, 'use_downside_correl': False, 'date': '2011-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 13, 'use_downside_correl': False, 'date': '2012-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 14, 'use_downside_correl': False, 'date': '2013-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 15, 'use_downside_correl': False, 'date': '2014-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 16, 'use_downside_correl': False, 'date': '2015-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 17, 'use_downside_correl': False, 'date': '2016-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 18, 'use_downside_correl': False, 'date': '2017-01-01'},
-                {'desired_return': 1.0561, 'num_days': 253 * 19, 'use_downside_correl': False, 'date': '2018-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 1, 'use_downside_correl': False, 'date': '2000-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 2, 'use_downside_correl': False, 'date': '2001-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 3, 'use_downside_correl': False, 'date': '2002-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 4, 'use_downside_correl': False, 'date': '2003-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 5, 'use_downside_correl': False, 'date': '2004-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 6, 'use_downside_correl': False, 'date': '2005-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 7, 'use_downside_correl': False, 'date': '2006-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 8, 'use_downside_correl': False, 'date': '2007-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 9, 'use_downside_correl': False, 'date': '2008-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 10, 'use_downside_correl': False, 'date': '2009-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 11, 'use_downside_correl': False, 'date': '2010-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 12, 'use_downside_correl': False, 'date': '2011-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 13, 'use_downside_correl': False, 'date': '2012-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 14, 'use_downside_correl': False, 'date': '2013-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 15, 'use_downside_correl': False, 'date': '2014-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 16, 'use_downside_correl': False, 'date': '2015-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 17, 'use_downside_correl': False, 'date': '2016-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 18, 'use_downside_correl': False, 'date': '2017-01-01'},
-                {'desired_return': 1.0661, 'num_days': 253 * 19, 'use_downside_correl': False, 'date': '2018-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 1, 'use_downside_correl': False, 'date': '2000-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 2, 'use_downside_correl': False, 'date': '2001-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 3, 'use_downside_correl': False, 'date': '2002-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 4, 'use_downside_correl': False, 'date': '2003-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 5, 'use_downside_correl': False, 'date': '2004-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 6, 'use_downside_correl': False, 'date': '2005-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 7, 'use_downside_correl': False, 'date': '2006-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 8, 'use_downside_correl': False, 'date': '2007-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 9, 'use_downside_correl': False, 'date': '2008-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 10, 'use_downside_correl': False, 'date': '2009-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 11, 'use_downside_correl': False, 'date': '2010-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 12, 'use_downside_correl': False, 'date': '2011-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 13, 'use_downside_correl': False, 'date': '2012-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 14, 'use_downside_correl': False, 'date': '2013-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 15, 'use_downside_correl': False, 'date': '2014-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 16, 'use_downside_correl': False, 'date': '2015-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 17, 'use_downside_correl': False, 'date': '2016-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 18, 'use_downside_correl': False, 'date': '2017-01-01'},
-                {'desired_return': 1.0761, 'num_days': 253 * 19, 'use_downside_correl': False, 'date': '2018-01-01'},
-                ]
+            while num_years < 19:
+                date_str = '%d-%d-01' % (1999 + num_years, (12 * quarter) + 1)
+                num_days = 253 * (num_years + quarter)
+                arg_list.append({
+                    'desired_return': 1.0747,
+                    'num_days': num_days,
+                    'use_downside_correl': False,
+                    'date': date_str})
+                quarter += 0.25
+                if quarter == 1:
+                    quarter = 0
+                    num_years += 1
+            
+            shuffle(arg_list)
             print('Running %d experiments.' % len(arg_list))
             output = pool.map(_poolMain, arg_list, 1)
     finally:
