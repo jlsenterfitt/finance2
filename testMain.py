@@ -19,6 +19,7 @@ def _poolMain(kwargs):
             kwargs['use_downside_correl'])
     except Exception as e:
         score = -100
+        print(kwargs)
         print(e)
         raise e
     with index.get_lock():
@@ -42,8 +43,8 @@ def main():
             num_years = 1
             quarter = 0
             arg_list = []
-            while num_years < 19:
-                date_str = '%d-%d-01' % (1999 + num_years, (12 * quarter) + 1)
+            while num_years < 14:
+                date_str = '%d-%d-01' % (2004 + num_years, (12 * quarter) + 1)
                 num_days = 253 * (num_years + quarter)
                 arg_list.append({
                     'desired_return': 1.0747,
